@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2RichMap — แผนที่รวยไม่ไหวแล้ว</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --green:#2E7D32; --green-light:#43A047; --green-pale:#E8F5E9;
+      --yellow:#FDD835; --yellow-dark:#F9A825; --yellow-pale:#FFFDE7;
+      --red:#E53935; --red-pale:#FFEBEE; --blue:#1E88E5; --blue-pale:#E3F2FD;
+      --gray-50:#FAFAFA; --gray-100:#F5F5F5; --gray-200:#EEEEEE;
+      --gray-300:#E0E0E0; --gray-500:#9E9E9E; --gray-700:#616161; --gray-900:#212121;
+      --font:'Sarabun',sans-serif;
+      --shadow:0 2px 8px rgba(0,0,0,0.12); --shadow-lg:0 8px 24px rgba(0,0,0,0.15);
+      --radius:12px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;font-family:var(--font);background:var(--gray-50);color:var(--gray-900);overflow:hidden}
+
+    /* ── HEADER ── */
+    #header{
+      position:fixed;top:0;left:0;right:0;z-index:1000;
+      background:var(--green);display:flex;align-items:center;
+      justify-content:space-between;padding:0 16px;height:56px;box-shadow:var(--shadow)
+    }
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo-badge{
+      width:38px;height:38px;background:var(--yellow);border-radius:9px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:17px;font-weight:900;color:var(--green);letter-spacing:-1px
+    }
+    .logo-name{color:#fff;font-weight:800;font-size:20px;letter-spacing:-0.5px}
+    .logo-sub{color:rgba(255,255,255,.7);font-size:11px;line-height:1.2}
+    .hdr-btns{display:flex;gap:8px}
+    .hdr-btn{
+      display:flex;align-items:center;gap:5px;padding:8px 14px;border:none;
+      border-radius:20px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s
+    }
+    .hdr-btn-yellow{background:var(--yellow);color:var(--green)}
+    .hdr-btn-ghost{background:rgba(255,255,255,.2);color:#fff}
+    .hdr-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+    /* ── SEARCH + FILTERS ── */
+    #topbar{
+      position:fixed;top:56px;left:0;right:0;z-index:999;
+      background:#fff;border-bottom:1px solid var(--gray-200)
+    }
+    .search-row{display:flex;gap:8px;padding:10px 14px;align-items:center}
+    .search-wrap{position:relative;flex:1}
+    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-500);font-size:14px}
+    #search-input{
+      width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--gray-200);
+      border-radius:20px;font-family:var(--font);font-size:14px;outline:none;
+      background:var(--gray-50);transition:border-color .2s
+    }
+    #search-input:focus{border-color:var(--green);background:#fff}
+
+    /* Location button */
+    .btn-locate{
+      flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gray-200);
+      background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      color:var(--blue);font-size:17px;transition:all .2s;position:relative
+    }
+    .btn-locate:hover{border-color:var(--blue);background:var(--blue-pale)}
+    .btn-locate.loading{border-color:var(--blue);background:var(--blue-pale)}
+    .btn-locate.loading i{animation:spin 1s linear infinite}
+    .btn-locate.active{border-color:var(--green);background:var(--green-pale);color:var(--green)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .locate-tip{
+      position:absolute;top:calc(100% + 6px);right:0;white-space:nowrap;
+      background:var(--gray-900);color:#fff;font-size:11px;padding:4px 10px;
+      border-radius:8px;pointer-events:none;opacity:0;transition:opacity .2s;
+      font-family:var(--font)
+    }
+    .btn-locate:hover .locate-tip{opacity:1}
+
+    /* Filter chips */
+    .filter-row{
+      display:flex;gap:6px;padding:6px 14px 10px;overflow-x:auto;scrollbar-width:none
+    }
+    .filter-row::-webkit-scrollbar{display:none}
+    .chip{
+      flex-shrink:0;padding:5px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
+      background:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
+      color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s
+    }
+    .chip:hover{border-color:var(--green);color:var(--green)}
+    .chip.on{background:var(--green);border-color:var(--green);color:#fff}
+    .dot{width:8px;height:8px;border-radius:50%}
+
+    /* ── LAYOUT ── */
+    #app{position:fixed;top:148px;left:0;right:0;bottom:0;display:flex}
+
+    /* ── MAP ── */
+    #map-wrap{flex:1;position:relative}
+    #map{width:100%;height:100%}
+    .map-legend{
+      position:absolute;bottom:16px;left:12px;z-index:900;
+      background:#fff;border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);font-size:11px
+    }
+    .legend-title{font-weight:700;color:var(--gray-700);margin-bottom:5px}
+    .leg-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;color:var(--gray-700)}
+    .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+    /* ── SIDEBAR ── */
+    #sidebar{
+      width:380px;flex-shrink:0;background:#fff;
+      border-left:1px solid var(--gray-200);
+      display:flex;flex-direction:column;overflow:hidden
+    }
+    .sb-head{
+      padding:12px 14px 8px;border-bottom:1px solid var(--gray-200);
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0
+    }
+    .sb-title{font-size:13px;font-weight:600;color:var(--gray-700)}
+    .cnt-pill{background:var(--green-pale);color:var(--green);padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600}
+    .sort-row{display:flex;gap:5px;padding:6px 14px 8px;border-bottom:1px solid var(--gray-100);flex-shrink:0}
+    .sort-lbl{font-size:11px;color:var(--gray-500);margin-right:2px;align-self:center}
+    .sort-btn{
+      font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;
+      border:1px solid var(--gray-200);background:#fff;cursor:pointer;font-family:var(--font);
+      color:var(--gray-700);transition:all .1s
+    }
+    .sort-btn.on{background:var(--green);color:#fff;border-color:var(--green)}
+    #shop-list{flex:1;overflow-y:auto;padding:8px}
+    #shop-list::-webkit-scrollbar{width:3px}
+    #shop-list::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px}
+
+    /* ── SHOP CARD ── */
+    .shop-card{
+      background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);
+      margin-bottom:8px;cursor:pointer;transition:all .15s;overflow:hidden
+    }
+    .shop-card:hover{border-color:var(--green);box-shadow:var(--shadow);transform:translateY(-1px)}
+    .shop-card.sel{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
+    .card-img{width:100%;height:110px;object-fit:cover;display:block;background:var(--gray-100)}
+    .card-body{padding:11px 12px}
+    .card-row1{display:flex;gap:9px;margin-bottom:7px}
+    .cat-icon{
+      width:34px;height:34px;border-radius:8px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;font-size:15px
+    }
+    .card-mid{flex:1;min-width:0}
+    .card-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-loc{font-size:11px;color:var(--gray-500);display:flex;align-items:center;gap:3px;margin-top:1px}
+    .card-r{text-align:right;flex-shrink:0}
+    .card-price{font-size:14px;font-weight:700;color:var(--green)}
+    .card-price small{font-size:10px;font-weight:400;color:var(--gray-500)}
+    .mini-stars{display:flex;gap:1px;justify-content:flex-end;margin-top:1px}
+    .mini-stars i{font-size:10px;color:var(--yellow-dark)}
+    .dist-pill{
+      font-size:10px;font-weight:600;color:var(--blue);background:var(--blue-pale);
+      padding:1px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:2px;margin-top:2px
+    }
+    .value-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+    .val-label{font-size:11px;color:var(--gray-500);width:52px}
+    .val-bar{flex:1;height:4px;background:var(--gray-200);border-radius:2px;overflow:hidden}
+    .val-fill{height:100%;background:linear-gradient(90deg,var(--yellow-dark),var(--green));border-radius:2px}
+    .card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid var(--gray-100)}
+    .gov-pill{font-size:10px;font-weight:600;color:#6A1B9A;background:#F3E5F5;padding:2px 7px;border-radius:6px}
+    .foot-btns{display:flex;gap:5px}
+    .btn-xs{
+      padding:4px 9px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font);
+      font-size:10px;font-weight:600;display:flex;align-items:center;gap:2px;transition:all .15s
+    }
+    .btn-share{background:var(--gray-100);color:var(--gray-700)}
+    .btn-share:hover{background:var(--gray-200)}
+    .btn-flag{background:var(--red-pale);color:var(--red)}
+    .btn-flag:hover{background:var(--red);color:#fff}
+
+    /* ── POPUP ── */
+    .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden}
+    .leaflet-popup-content{margin:0!important;min-width:210px}
+    .pop-img{width:100%;height:110px;object-fit:cover;display:block}
+    .pop-body{padding:10px 12px}
+    .pop-name{font-family:var(--font);font-size:13px;font-weight:700;margin-bottom:2px}
+    .pop-price{font-family:var(--font);font-size:15px;font-weight:800;color:var(--green)}
+    .pop-loc{font-family:var(--font);font-size:11px;color:var(--gray-500)}
+    .pop-btn{
+      display:block;width:100%;background:var(--green);color:#fff;border:none;
+      padding:9px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer
+    }
+    .pop-btn:hover{background:var(--green-light)}
+
+    /* My location marker */
+    .my-dot{
+      width:18px;height:18px;border-radius:50%;background:var(--blue);
+      border:3px solid #fff;box-shadow:0 0 0 4px rgba(30,136,229,.3)
+    }
+
+    /* ── MODAL BASE ── */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;
+      display:flex;align-items:flex-end;justify-content:center;
+      opacity:0;pointer-events:none;transition:opacity .25s
+    }
+    .overlay.open{opacity:1;pointer-events:all}
+    .modal{
+      background:#fff;width:100%;max-width:620px;border-radius:20px 20px 0 0;
+      padding:18px 20px 24px;max-height:92vh;overflow-y:auto;
+      transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+      position:relative
+    }
+    .overlay.open .modal{transform:translateY(0)}
+    .modal-handle{width:36px;height:4px;background:var(--gray-200);border-radius:2px;margin:0 auto 14px}
+    .modal-close{
+      position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
+      background:var(--gray-100);border:none;cursor:pointer;font-size:14px;
+      color:var(--gray-700);display:flex;align-items:center;justify-content:center
+    }
+    .modal-close:hover{background:var(--gray-200)}
+    @media(min-width:768px){
+      .overlay{align-items:center}
+      .modal{border-radius:20px;max-height:88vh}
+    }
+
+    /* ── DETAIL ── */
+    .det-cover{width:100%;height:190px;object-fit:cover;border-radius:12px;margin-bottom:14px;display:block}
+    .det-hdr{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px}
+    .det-icon{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+    .det-name{font-size:19px;font-weight:800;margin-bottom:2px}
+    .det-loc{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:3px}
+    .det-price-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+    .det-price{font-size:26px;font-weight:800;color:var(--green)}
+    .det-price small{font-size:13px;color:var(--gray-500);font-weight:400}
+    .det-stars{display:flex;align-items:center;gap:3px}
+    .det-stars i{font-size:14px;color:var(--yellow-dark)}
+    .det-stars span{font-size:12px;color:var(--gray-500);margin-left:3px}
+    .sec{margin-bottom:14px}
+    .sec-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);margin-bottom:7px}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .info-box{background:var(--gray-50);border-radius:8px;padding:9px}
+    .info-lbl{font-size:11px;color:var(--gray-500);margin-bottom:2px}
+    .info-val{font-size:13px;font-weight:600}
+
+    /* Menu scroll */
+    .menu-scroll{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+    .menu-scroll::-webkit-scrollbar{display:none}
+    .menu-card{flex-shrink:0;width:110px}
+    .menu-img{width:110px;height:80px;object-fit:cover;border-radius:9px;display:block;background:var(--gray-100)}
+    .menu-name{font-size:11px;font-weight:600;margin-top:3px;text-align:center;color:var(--gray-700)}
+    .menu-price{font-size:11px;color:var(--green);font-weight:700;text-align:center}
+
+    /* Reviews */
+    .rev-item{background:var(--gray-50);border-radius:9px;padding:10px;margin-bottom:7px}
+    .rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+    .rev-name{font-size:12px;font-weight:600}
+    .rev-stars{display:flex;gap:1px}
+    .rev-stars i{font-size:9px;color:var(--yellow-dark)}
+    .rev-text{font-size:12px;color:var(--gray-700);line-height:1.5}
+    .rev-date{font-size:10px;color:var(--gray-500);margin-top:3px}
+    .rev-form{background:var(--green-pale);border-radius:9px;padding:11px;margin-top:8px}
+    .rev-form-t{font-size:13px;font-weight:600;color:var(--green);margin-bottom:7px}
+    .star-pick{display:flex;gap:4px;margin-bottom:7px}
+    .star-pick i{font-size:22px;color:var(--gray-300);cursor:pointer;transition:color .1s}
+    .star-pick i.on{color:var(--yellow-dark)}
+
+    .det-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-100)}
+    .act-btn{
+      flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);
+      font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s
+    }
+    .act-green{background:var(--green);color:#fff}
+    .act-green:hover{background:var(--green-light)}
+    .act-gray{background:var(--gray-100);color:var(--gray-700)}
+    .act-gray:hover{background:var(--gray-200)}
+    .act-red{background:var(--red-pale);color:var(--red)}
+    .act-red:hover{background:var(--red);color:#fff}
+    .btn-wongnai{
+      display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
+      background:#FF5722;color:#fff;border:none;border-radius:8px;
+      font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none
+    }
+
+    /* ── ADD FORM ── */
+    .form-g{margin-bottom:13px}
+    .form-lbl{font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:5px;display:block}
+    .req{color:var(--red);margin-left:2px}
+    .form-inp,.form-sel,.form-ta{
+      width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;
+      font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;color:var(--gray-900)
+    }
+    .form-inp:focus,.form-sel:focus,.form-ta:focus{border-color:var(--green)}
+    .form-ta{resize:vertical;min-height:70px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+    /* Star picker for value */
+    .val-pick{display:flex;gap:6px;margin-top:4px}
+    .val-pick i{font-size:26px;color:var(--gray-300);cursor:pointer;transition:color .1s}
+    .val-pick i.on{color:var(--yellow-dark)}
+
+    /* Map pin picker */
+    #pin-map{
+      width:100%;height:200px;border-radius:10px;border:1.5px solid var(--gray-200);
+      margin-top:6px;cursor:crosshair;z-index:1
+    }
+    .pin-status{font-size:12px;color:var(--gray-500);margin-top:4px;display:flex;align-items:center;gap:4px}
+    .pin-status.set{color:var(--green)}
+
+    /* Image upload */
+    .upload-zone{
+      border:2px dashed var(--gray-300);border-radius:10px;padding:20px;text-align:center;
+      cursor:pointer;transition:all .15s;background:var(--gray-50)
+    }
+    .upload-zone:hover{border-color:var(--green);background:var(--green-pale)}
+    .upload-zone.drag{border-color:var(--green);background:var(--green-pale)}
+    .upload-icon{font-size:28px;margin-bottom:6px;color:var(--gray-400)}
+    .upload-text{font-size:13px;color:var(--gray-500)}
+    .upload-text strong{color:var(--green)}
+    .preview-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .preview-thumb{
+      position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;
+      border:1.5px solid var(--gray-200)
+    }
+    .preview-thumb img{width:100%;height:100%;object-fit:cover}
+    .preview-rm{
+      position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+      background:rgba(0,0,0,.6);color:#fff;border:none;font-size:9px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center
+    }
+
+    /* Submit btn */
+    .btn-submit{
+      width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;
+      font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s
+    }
+    .btn-submit:hover{background:var(--green-light)}
+    .success-box{text-align:center;padding:20px 0;display:none}
+    .suc-icon{font-size:44px;margin-bottom:10px}
+    .suc-title{font-size:19px;font-weight:800;color:var(--green);margin-bottom:6px}
+    .suc-text{font-size:13px;color:var(--gray-700)}
+
+    /* ── ADMIN ── */
+    #admin-modal .modal{max-width:680px}
+    .adm-tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:14px}
+    .adm-tab{
+      flex:1;padding:9px;border:none;background:transparent;font-family:var(--font);
+      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
+      border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s
+    }
+    .adm-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .adm-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px}
+    .adm-sec{display:none}
+    .adm-sec.on{display:block}
+    .adm-row{
+      display:flex;gap:10px;align-items:flex-start;padding:10px;
+      border:1px solid var(--gray-200);border-radius:9px;margin-bottom:7px
+    }
+    .adm-thumb{width:56px;height:56px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
+    .adm-info{flex:1;min-width:0}
+    .adm-name{font-size:13px;font-weight:700;margin-bottom:2px}
+    .adm-meta{font-size:11px;color:var(--gray-500)}
+    .adm-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+    .st-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;margin-left:4px}
+    .st-ok{background:var(--green-pale);color:var(--green)}
+    .st-wait{background:var(--yellow-pale);color:#E65100}
+    .st-rep{background:var(--red-pale);color:var(--red)}
+    .btn-ok{background:var(--green-pale);color:var(--green);border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .btn-ok:hover{background:var(--green);color:#fff}
+    .btn-no{background:var(--red-pale);color:var(--red);border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .btn-no:hover{background:var(--red);color:#fff}
+    .btn-ed{background:var(--yellow-pale);color:#E65100;border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .adm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+    .stat-box{background:var(--gray-50);border-radius:9px;padding:11px;text-align:center}
+    .stat-n{font-size:22px;font-weight:800;color:var(--green)}
+    .stat-l{font-size:11px;color:var(--gray-500)}
+    .empty-msg{text-align:center;padding:20px;color:var(--gray-500);font-size:13px}
+
+    /* Admin login */
+    .pw-wrap{text-align:center;padding:10px 0 14px}
+
+    /* ── MOBILE ── */
+    #mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:1000;
+      background:#fff;border-top:1px solid var(--gray-200);height:58px}
+    .mnav{display:flex;height:100%}
+    .mnav-btn{
+      flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:2px;border:none;background:transparent;font-family:var(--font);color:var(--gray-500);
+      font-size:10px;font-weight:500;cursor:pointer;transition:color .15s
+    }
+    .mnav-btn i{font-size:18px}
+    .mnav-btn.on{color:var(--green)}
+    .mnav-add .add-circle{
+      width:42px;height:42px;background:var(--green);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;
+      box-shadow:0 4px 12px rgba(46,125,50,.4)
+    }
+
+    /* ── TOAST ── */
+    #toast{
+      position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);
+      background:var(--gray-900);color:#fff;padding:9px 18px;border-radius:20px;
+      font-size:13px;font-weight:500;z-index:4000;opacity:0;transition:all .3s;
+      pointer-events:none;white-space:nowrap;font-family:var(--font)
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    .no-results{text-align:center;padding:36px 16px;color:var(--gray-500)}
+    .no-results i{font-size:36px;margin-bottom:10px;color:var(--gray-300);display:block}
+
+    @media(max-width:767px){
+      #app{top:148px;bottom:58px}
+      #sidebar{width:100%;border-left:none;display:none}
+      #sidebar.mob-on{display:flex;position:absolute;inset:0;z-index:10}
+      #map-wrap.mob-off{display:none}
+      #mobile-nav{display:flex}
+      .hdr-btn-yellow span,.hdr-btn-ghost span{display:none}
+      .hdr-btn-yellow{padding:8px 12px}
+      .hdr-btn-ghost{padding:8px 10px}
+    }
+    @media(min-width:768px) and (max-width:1023px){#sidebar{width:330px}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header">
+  <a class="logo" href="#">
+    <div class="logo-badge">2R</div>
+    <div>
+      <div class="logo-name">2RichMap</div>
+      <div class="logo-sub">แผนที่รวยไม่ไหวแล้ว</div>
+    </div>
+  </a>
+  <div class="hdr-btns">
+    <button class="hdr-btn hdr-btn-yellow" onclick="openAddModal()">
+      <i class="fa fa-plus"></i><span> เพิ่มร้าน</span>
+    </button>
+    <button class="hdr-btn hdr-btn-ghost" onclick="openAdminGate()">
+      <i class="fa fa-shield-halved"></i><span> Admin</span>
+    </button>
+  </div>
+</header>
+
+<!-- SEARCH + FILTERS -->
+<div id="topbar">
+  <div class="search-row">
+    <div class="search-wrap">
+      <i class="fa fa-magnifying-glass"></i>
+      <input type="text" id="search-input" placeholder="ค้นหาร้าน หรือย่าน..." oninput="doSearch()">
+    </div>
+    <button class="btn-locate" id="btn-loc" onclick="locateMe()" title="">
+      <i class="fa fa-location-crosshairs" id="loc-icon"></i>
+      <span class="locate-tip">ค้นหาตำแหน่งของฉัน</span>
+    </button>
+  </div>
+  <div class="filter-row">
+    <button class="chip on" data-cat="all" onclick="setFilter('all',this)"><i class="fa fa-border-all"></i> ทั้งหมด</button>
+    <button class="chip" data-cat="street" onclick="setFilter('street',this)"><span class="dot" style="background:#FF7043"></span>Street Food</button>
+    <button class="chip" data-cat="restaurant" onclick="setFilter('restaurant',this)"><span class="dot" style="background:#1E88E5"></span>ร้านอาหาร</button>
+    <button class="chip" data-cat="vendor" onclick="setFilter('vendor',this)"><span class="dot" style="background:#8E24AA"></span>แผงลอย</button>
+    <button class="chip" data-cat="market" onclick="setFilter('market',this)"><span class="dot" style="background:#F9A825"></span>ตลาดนัด</button>
+    <button class="chip" data-cat="convenience" onclick="setFilter('convenience',this)"><span class="dot" style="background:#43A047"></span>สะดวกซื้อ</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="app">
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div class="map-legend">
+      <div class="legend-title">หมวดหมู่</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#FF7043"></span>Street Food</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#1E88E5"></span>ร้านอาหาร</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#8E24AA"></span>แผงลอย</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#F9A825"></span>ตลาดนัด</div>
+      <div class="leg-row"><span class="leg-dot" style="background:#43A047"></span>สะดวกซื้อ</div>
+    </div>
+  </div>
+  <div id="sidebar">
+    <div class="sb-head">
+      <span class="sb-title">ร้านอาหารราคาถูก</span>
+      <span class="cnt-pill" id="cnt">12 ร้าน</span>
+    </div>
+    <div class="sort-row">
+      <span class="sort-lbl">เรียง:</span>
+      <button class="sort-btn on" onclick="setSort('default',this)">แนะนำ</button>
+      <button class="sort-btn" onclick="setSort('price',this)">ถูกสุด</button>
+      <button class="sort-btn" onclick="setSort('rating',this)">คะแนนสูงสุด</button>
+      <button class="sort-btn" onclick="setSort('distance',this)">ใกล้สุด</button>
+    </div>
+    <div id="shop-list"></div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div id="mobile-nav">
+  <div class="mnav">
+    <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
+    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>รายการ</span></button>
+    <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="overlay" id="det-modal" onclick="closeOnBg(event,'det-modal')">
+  <div class="modal" id="det-body"><div class="modal-handle"></div></div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="add-modal" onclick="closeOnBg(event,'add-modal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('add-modal')"><i class="fa fa-times"></i></button>
+    <div id="add-form">
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">🍜 เพิ่มร้านอาหาร</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">ช่วยกันเพิ่มร้านดีราคาถูก 💪</div>
+
+      <div class="form-g">
+        <label class="form-lbl">ชื่อร้าน<span class="req">*</span></label>
+        <input type="text" class="form-inp" id="f-name" placeholder="เช่น ข้าวแกงป้าแดง">
+      </div>
+
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">หมวดหมู่<span class="req">*</span></label>
+          <select class="form-sel" id="f-cat">
+            <option value="">-- เลือก --</option>
+            <option value="street">🍢 Street Food</option>
+            <option value="restaurant">🍜 ร้านอาหาร</option>
+            <option value="vendor">🛒 แผงลอย/หาบเร่</option>
+            <option value="market">🏪 ตลาดนัด</option>
+            <option value="convenience">🏬 สะดวกซื้อ</option>
+          </select>
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ย่าน/พื้นที่<span class="req">*</span></label>
+          <input type="text" class="form-inp" id="f-loc" placeholder="เช่น สาทร">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">ราคาต่ำสุด (฿)</label>
+          <input type="number" class="form-inp" id="f-min" placeholder="35">
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ราคาสูงสุด (฿)</label>
+          <input type="number" class="form-inp" id="f-max" placeholder="60">
+        </div>
+      </div>
+
+      <div class="form-g">
+        <label class="form-lbl">ระดับความคุ้มค่า</label>
+        <div class="val-pick" id="val-pick">
+          <i class="fa fa-star" data-v="1" onclick="pickVal(1)"></i>
+          <i class="fa fa-star" data-v="2" onclick="pickVal(2)"></i>
+          <i class="fa fa-star" data-v="3" onclick="pickVal(3)"></i>
+          <i class="fa fa-star" data-v="4" onclick="pickVal(4)"></i>
+          <i class="fa fa-star" data-v="5" onclick="pickVal(5)"></i>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);margin-top:4px" id="val-label">กดดาวเพื่อให้คะแนนความคุ้มค่า</div>
+      </div>
+
+      <div class="form-g">
+        <label class="form-lbl">มีที่จอดรถ</label>
+        <select class="form-sel" id="f-park">
+          <option value="no">❌ ไม่มี</option>
+          <option value="yes">✅ มี</option>
+          <option value="nearby">🅿️ มีใกล้เคียง</option>
+        </select>
+      </div>
+
+      <div class="form-g">
+        <label class="form-lbl">📍 จิ้มตำแหน่งร้านบนแผนที่<span class="req">*</span></label>
+        <div id="pin-map"></div>
+        <div class="pin-status" id="pin-status"><i class="fa fa-circle-info"></i> คลิกบนแผนที่เพื่อปักหมุดตำแหน่งร้าน</div>
+      </div>
+
+      <div class="form-g">
+        <label class="form-lbl">รูปภาพร้านและเมนู</label>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="handleDrop(event)">
+          <div class="upload-icon"><i class="fa fa-image"></i></div>
+          <div class="upload-text">คลิกหรือลากไฟล์มาวาง<br><strong>รองรับ JPG, PNG, WEBP</strong></div>
+        </div>
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+        <div class="preview-grid" id="preview-grid"></div>
+      </div>
+
+      <div class="form-g">
+        <label class="form-lbl">รีวิวเพิ่มเติม</label>
+        <textarea class="form-ta" id="f-desc" placeholder="บอกเพื่อนๆ ว่าเมนูเด็ดคืออะไร..."></textarea>
+      </div>
+
+      <button class="btn-submit" onclick="submitShop()"><i class="fa fa-check-circle"></i> ส่งข้อมูลร้าน</button>
+    </div>
+
+    <div class="success-box" id="add-success">
+      <div class="suc-icon">🎉</div>
+      <div class="suc-title">ขอบคุณมากเลย!</div>
+      <div class="suc-text">ร้านของคุณอยู่ระหว่างตรวจสอบ<br>Admin จะอนุมัติและแสดงในแผนที่เร็วๆ นี้ครับ</div>
+      <button class="btn-submit" style="margin-top:14px" onclick="closeModal('add-modal')">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="overlay" id="pw-modal" onclick="closeOnBg(event,'pw-modal')">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('pw-modal')"><i class="fa fa-times"></i></button>
+    <div class="pw-wrap">
+      <div style="font-size:34px;margin-bottom:8px">🔐</div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:4px">Admin Login</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">กรอก password เพื่อเข้าจัดการร้าน</div>
+    </div>
+    <div class="form-g">
+      <input type="password" class="form-inp" id="admin-pw" placeholder="Password"
+        onkeydown="if(event.key==='Enter')checkPw()">
+    </div>
+    <div id="pw-err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none">รหัสผ่านไม่ถูกต้อง</div>
+    <button class="btn-submit" onclick="checkPw()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="overlay" id="admin-modal" onclick="closeOnBg(event,'admin-modal')">
+  <div class="modal" style="max-width:680px;position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('admin-modal')"><i class="fa fa-times"></i></button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:22px">🛡️</span>
+      <div>
+        <div style="font-size:17px;font-weight:800">Admin Panel</div>
+        <div style="font-size:11px;color:var(--gray-500)">2RichMap — จัดการร้านค้าและรีวิว</div>
+      </div>
+      <button class="hdr-btn hdr-btn-ghost" style="margin-left:auto;background:var(--red-pale);color:var(--red)" onclick="adminLogout()">
+        <i class="fa fa-right-from-bracket"></i> ออก
+      </button>
+    </div>
+    <div class="adm-stats" id="adm-stats"></div>
+    <div class="adm-tabs">
+      <button class="adm-tab on" onclick="switchAdmTab('all',this)">ร้านทั้งหมด</button>
+      <button class="adm-tab" onclick="switchAdmTab('pending',this)">รอตรวจสอบ <span class="adm-badge" id="adm-pend-cnt">0</span></button>
+      <button class="adm-tab" onclick="switchAdmTab('reported',this)">รายงาน <span class="adm-badge" id="adm-rep-cnt">0</span></button>
+    </div>
+    <div id="adm-all" class="adm-sec on"></div>
+    <div id="adm-pending" class="adm-sec"></div>
+    <div id="adm-reported" class="adm-sec"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── DATA ────────────────────────────────────────────────
+const shops = [
+  {id:1,name:"ผัดไทยพระอาทิตย์",cat:"street",location:"ท่าพระอาทิตย์ พระนคร",
+   lat:13.7621,lng:100.4912,priceMin:60,priceMax:80,rating:4.8,reviews:342,
+   value:5,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/pthai1/800/400",
+   desc:"ผัดไทยเส้นสดพระอาทิตย์ ตำนานริมแม่น้ำเจ้าพระยา เปิดมากว่า 30 ปี กุ้งสดตัวโต เส้นเหนียวนุ่ม",
+   menus:[{name:"ผัดไทยกุ้งสด",price:80,img:"https://picsum.photos/seed/ptm1/300/200"},
+          {name:"ผัดไทยหมู",price:60,img:"https://picsum.photos/seed/ptm2/300/200"},
+          {name:"ผัดไทยไข่",price:60,img:"https://picsum.photos/seed/ptm3/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ผัดไทยพระอาทิตย์",
+   reviewList:[{name:"สมหมาย",stars:5,text:"อร่อยมาก กุ้งสดใหม่ ราคาคุ้มมาก!",date:"4 ม.ค. 2568"},
+               {name:"น้องพิม",stars:5,text:"มาทุกอาทิตย์ ดีที่สุดในกรุงเทพ",date:"2 ม.ค. 2568"},
+               {name:"พี่แบงค์",stars:4,text:"คิวยาวหน่อย แต่คุ้มค่ารอ",date:"29 ธ.ค. 2567"}]},
+  {id:2,name:"ข้าวต้มกุ๊ย เยาวราช",cat:"restaurant",location:"เยาวราช บางรัก",
+   lat:13.7397,lng:100.5131,priceMin:50,priceMax:100,rating:4.6,reviews:189,
+   value:4,status:"approved",reportCount:0,parking:"nearby",
+   cover:"https://picsum.photos/seed/ktm1/800/400",
+   desc:"ข้าวต้มกุ๊ย 24 ชั่วโมง สไตล์จีนดั้งเดิม เต้าหู้ทอดกรอบ หมูสับนุ่ม น้ำซุปหอม",
+   menus:[{name:"ข้าวต้มหมู",price:60,img:"https://picsum.photos/seed/ktm2/300/200"},
+          {name:"ข้าวต้มปลา",price:70,img:"https://picsum.photos/seed/ktm3/300/200"},
+          {name:"โจ๊กเต้าหู้",price:50,img:"https://picsum.photos/seed/ktm4/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ข้าวต้มกุ๊ยเยาวราช",
+   reviewList:[{name:"อ้อย",stars:5,text:"เปิดดึก ดีมากสำหรับคนทำงานดึก",date:"3 ม.ค. 2568"},
+               {name:"นักท่องราตรี",stars:4,text:"น้ำซุปเข้มข้น อิ่มนาน",date:"1 ม.ค. 2568"}]},
+  {id:3,name:"ข้าวแกงรถไฟ หัวลำโพง",cat:"vendor",location:"หัวลำโพง บางรัก",
+   lat:13.7378,lng:100.5159,priceMin:35,priceMax:60,rating:4.5,reviews:276,
+   value:5,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/kaeng1/800/400",
+   desc:"ข้าวแกงใต้รถไฟ ราคาพิเศษ 35-60 บาท ข้าวฟรีเติมได้ แกงหลายอย่างให้เลือก",
+   menus:[{name:"ข้าวแกงเนื้อ",price:50,img:"https://picsum.photos/seed/km1/300/200"},
+          {name:"ข้าวผัดกระเพรา",price:40,img:"https://picsum.photos/seed/km2/300/200"},
+          {name:"ข้าวไข่เจียว",price:35,img:"https://picsum.photos/seed/km3/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ข้าวแกงรถไฟหัวลำโพง",
+   reviewList:[{name:"ผู้โดยสาร",stars:5,text:"ถูกมาก อร่อยด้วย ข้าวเติมได้ฟรี",date:"5 ม.ค. 2568"},
+               {name:"นักเรียน",stars:5,text:"กินได้ทุกวัน ราคาเป็นมิตรมาก",date:"1 ม.ค. 2568"}]},
+  {id:4,name:"ข้าวมันไก่ประตูน้ำ",cat:"street",location:"ประตูน้ำ ราชเทวี",
+   lat:13.7488,lng:100.5468,priceMin:55,priceMax:65,rating:4.7,reviews:421,
+   value:5,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/kmk1/800/400",
+   desc:"ตำนาน 40 ปี ไก่บ้านนุ่ม หนังกรอบ น้ำซุปใส ซอสเด็ดเป็นเอกลักษณ์",
+   menus:[{name:"ข้าวมันไก่ต้ม",price:55,img:"https://picsum.photos/seed/km4/300/200"},
+          {name:"ข้าวมันไก่ทอด",price:65,img:"https://picsum.photos/seed/km5/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ข้าวมันไก่ประตูน้ำ",
+   reviewList:[{name:"สาวออฟฟิศ",stars:5,text:"ข้าวมันไก่ดีที่สุดในกรุงเทพ",date:"4 ม.ค. 2568"},
+               {name:"โต",stars:5,text:"มาทุกอาทิตย์ รสชาติไม่เคยเปลี่ยน",date:"2 ม.ค. 2568"}]},
+  {id:5,name:"ตลาดนัดรัชดา",cat:"market",location:"รัชดาภิเษก ห้วยขวาง",
+   lat:13.7750,lng:100.5614,priceMin:40,priceMax:80,rating:4.3,reviews:567,
+   value:4,status:"approved",reportCount:0,parking:"yes",
+   cover:"https://picsum.photos/seed/ratchada1/800/400",
+   desc:"ตลาดนัดกลางคืนใหญ่ที่สุดในกรุงเทพ อาหารหลากหลาย เปิดอังคาร-อาทิตย์ 17.00-01.00",
+   menus:[{name:"หมูปิ้งข้าวเหนียว",price:40,img:"https://picsum.photos/seed/rm1/300/200"},
+          {name:"ส้มตำปูปลาร้า",price:60,img:"https://picsum.photos/seed/rm2/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ตลาดนัดรัชดา",
+   reviewList:[{name:"คนกรุงเทพ",stars:4,text:"เยอะมาก ต้องมาลองสักครั้ง",date:"5 ม.ค. 2568"}]},
+  {id:6,name:"ส้มตำนางเลิ้ง",cat:"street",location:"นางเลิ้ง ป้อมปราบ",
+   lat:13.7603,lng:100.5237,priceMin:40,priceMax:70,rating:4.6,reviews:198,
+   value:5,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/somtam1/800/400",
+   desc:"ส้มตำสูตรอีสานแท้ ตำสดทุกจาน ปูปลาร้าคุณภาพ ไก่ย่างหอม",
+   menus:[{name:"ส้มตำปูปลาร้า",price:50,img:"https://picsum.photos/seed/sm1/300/200"},
+          {name:"ไก่ย่าง",price:70,img:"https://picsum.photos/seed/sm2/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ส้มตำนางเลิ้ง",
+   reviewList:[{name:"คนอีสาน",stars:5,text:"รสชาติเหมือนบ้านเลย",date:"4 ม.ค. 2568"}]},
+  {id:7,name:"โจ๊กโบราณพระนคร",cat:"street",location:"พระนคร ท่าพระจันทร์",
+   lat:13.7514,lng:100.4934,priceMin:30,priceMax:50,rating:4.4,reviews:134,
+   value:5,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/joke1/800/400",
+   desc:"โจ๊กอบอุ่นสูตรโบราณ เปิดตี 4 – 10 โมง ข้าวนุ่ม ไข่แดงแบบดั้งเดิม",
+   menus:[{name:"โจ๊กหมูสับ",price:40,img:"https://picsum.photos/seed/jm1/300/200"},
+          {name:"โจ๊กไข่พิเศษ",price:50,img:"https://picsum.photos/seed/jm2/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=โจ๊กพระนคร",
+   reviewList:[{name:"คนทำงานเช้า",stars:5,text:"เปิดเช้ามาก อบอุ่นมาก อร่อยมาก",date:"3 ม.ค. 2568"}]},
+  {id:8,name:"ก๋วยเตี๋ยวเรือวัดดาวดึงส์",cat:"restaurant",location:"บางกอกน้อย",
+   lat:13.7554,lng:100.4876,priceMin:50,priceMax:80,rating:4.5,reviews:312,
+   value:4,status:"approved",reportCount:0,parking:"nearby",
+   cover:"https://picsum.photos/seed/boat1/800/400",
+   desc:"ก๋วยเตี๋ยวเรือสูตรดั้งเดิม น้ำซุปข้นหอมกรุ่น บรรยากาศร้านเก่าแก่ริมคลอง",
+   menus:[{name:"ก๋วยเตี๋ยวเรือหมู",price:50,img:"https://picsum.photos/seed/bm1/300/200"},
+          {name:"ก๋วยเตี๋ยวเรือเนื้อ",price:70,img:"https://picsum.photos/seed/bm2/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ก๋วยเตี๋ยวเรือวัดดาวดึงส์",
+   reviewList:[{name:"มาลี",stars:5,text:"น้ำซุปเข้มข้น เส้นหอม อิ่มคุ้ม",date:"4 ม.ค. 2568"}]},
+  {id:9,name:"ตลาดออร์ทอร์กอร์",cat:"market",location:"ลาดยาว จตุจักร",
+   lat:13.8050,lng:100.5590,priceMin:30,priceMax:70,rating:4.2,reviews:445,
+   value:4,status:"approved",reportCount:0,parking:"yes",
+   cover:"https://picsum.photos/seed/otk1/800/400",
+   desc:"ตลาดเกษตรรัฐบาล ของสดราคาถูกตรงจากเกษตรกร อาหารสำเร็จรูปราคาประหยัด",
+   menus:[{name:"ข้าวกล่องโฮมเมด",price:45,img:"https://picsum.photos/seed/om1/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ตลาดออร์ทอร์กอร์",
+   reviewList:[{name:"แม่บ้าน",stars:4,text:"ของสดราคาถูกมาก ชอบมาจ่ายตลาดที่นี่",date:"5 ม.ค. 2568"}]},
+  {id:10,name:"7-Eleven เมนูประหยัด",cat:"convenience",location:"ทั่วกรุงเทพฯ",
+   lat:13.7563,lng:100.5018,priceMin:25,priceMax:45,rating:3.8,reviews:1024,
+   value:3,status:"approved",reportCount:0,parking:"nearby",
+   cover:"https://picsum.photos/seed/sev1/800/400",
+   desc:"ข้าวกล่อง 25-35฿ ซาลาเปา 8฿ ลูกชิ้นปิ้ง 10฿ โจ๊ก 25฿ สำหรับยามฉุกเฉิน",
+   menus:[{name:"ข้าวกล่องไก่ย่าง",price:35,img:"https://picsum.photos/seed/sm4/300/200"},
+          {name:"ซาลาเปาหมูแดง",price:15,img:"https://picsum.photos/seed/sm5/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=7eleven+ถูก",
+   reviewList:[{name:"นักศึกษา",stars:4,text:"ยามฉุกเฉินดีมาก",date:"5 ม.ค. 2568"}]},
+  {id:11,name:"ผัดกะเพราไข่ดาว ลาดพร้าว",cat:"vendor",location:"ลาดพร้าว บึงกุ่ม",
+   lat:13.8100,lng:100.5690,priceMin:40,priceMax:60,rating:4.6,reviews:167,
+   value:5,status:"approved",reportCount:0,parking:"nearby",
+   cover:"https://picsum.photos/seed/kpk1/800/400",
+   desc:"กะเพราสูตรคลาสสิก ข้าวฟรีเติมได้ ไข่ดาวกรอบเหลือง น้ำมันแดงสวย",
+   menus:[{name:"ผัดกะเพราหมูสับ",price:45,img:"https://picsum.photos/seed/kp1/300/200"},
+          {name:"ผัดกะเพราทะเล",price:60,img:"https://picsum.photos/seed/kp3/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=ผัดกะเพราลาดพร้าว",
+   reviewList:[{name:"ช่างแอร์",stars:5,text:"กะเพราร้อนๆ กลางวัน เด็ดสุดๆ",date:"4 ม.ค. 2568"}]},
+  {id:12,name:"บะหมี่แห้งเยาวราช",cat:"restaurant",location:"เยาวราช สัมพันธวงศ์",
+   lat:13.7422,lng:100.5082,priceMin:45,priceMax:80,rating:4.5,reviews:256,
+   value:4,status:"approved",reportCount:0,parking:"no",
+   cover:"https://picsum.photos/seed/bam1/800/400",
+   desc:"บะหมี่เกี้ยวสูตรจีนฮกเกี้ยน เส้นทำมือเหนียวนุ่ม หมูแดงอบเตาถ่าน",
+   menus:[{name:"บะหมี่แห้งหมูแดง",price:55,img:"https://picsum.photos/seed/bam2/300/200"},
+          {name:"บะหมี่น้ำเกี้ยว",price:55,img:"https://picsum.photos/seed/bam3/300/200"}],
+   wongnai:"https://www.wongnai.com/search?q=บะหมี่แห้งเยาวราช",
+   reviewList:[{name:"คนบางนา",stars:5,text:"เส้นดี หมูแดงเยอะ คุ้มมาก",date:"5 ม.ค. 2568"}]}
+];
+
+let pendingShops = [];
+let reportedReviews = [];
+
+// ── CONFIG ──────────────────────────────────────────────
+const CAT = {
+  street:     {label:"Street Food",color:"#FF7043",icon:"🍢"},
+  restaurant: {label:"ร้านอาหาร", color:"#1E88E5",icon:"🍜"},
+  vendor:     {label:"แผงลอย",    color:"#8E24AA",icon:"🛒"},
+  market:     {label:"ตลาดนัด",   color:"#F9A825",icon:"🏪"},
+  convenience:{label:"สะดวกซื้อ", color:"#43A047",icon:"🏬"}
+};
+const PARKING = {yes:"✅ มีที่จอด",no:"❌ ไม่มี",nearby:"🅿️ ใกล้เคียง"};
+const VALLABELS = ["","น้อยมาก","พอได้","โอเค","คุ้มค่า","คุ้มมาก!"];
+
+// ── STATE ────────────────────────────────────────────────
+let map, markers={}, pinMap, pinMarker, pinLat=null, pinLng=null;
+let userLat=null, userLng=null, userMarker=null;
+let filterCat="all", searchQ="", sortMode="default";
+let selId=null, isAdmin=false;
+let uploadedImgs=[];
+let valPick=0;
+const PW="2rich";
+let starPicks={};
+
+// ── MAP ──────────────────────────────────────────────────
+function initMap(){
+  map=L.map('map',{zoomControl:true}).setView([13.756,100.502],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {attribution:'© OpenStreetMap'}).addTo(map);
+  shops.filter(s=>s.status==="approved").forEach(addMarker);
+}
+
+function mkIcon(cat){
+  const c=CAT[cat];
+  return L.divIcon({
+    html:`<div style="width:36px;height:36px;background:${c.color};border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3);
+      display:flex;align-items:center;justify-content:center">
+      <span style="transform:rotate(45deg);font-size:14px">${c.icon}</span></div>`,
+    iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-36],className:''
+  });
+}
+
+function addMarker(s){
+  const m=L.marker([s.lat,s.lng],{icon:mkIcon(s.cat)}).addTo(map);
+  m.bindPopup(popupHtml(s),{maxWidth:240});
+  m.on('click',()=>{ selShop(s.id); if(window.innerWidth>767) scrollToCard(s.id); });
+  markers[s.id]=m;
+}
+
+function popupHtml(s){
+  const c=CAT[s.cat];
+  const p=s.priceMin===s.priceMax?`${s.priceMin}฿`:`${s.priceMin}-${s.priceMax}฿`;
+  const d=userLat?` · 📍 ${fmtDist(haversine(userLat,userLng,s.lat,s.lng))}`:'';
+  return `<img class="pop-img" src="${s.cover}" onerror="this.style.display='none'" loading="lazy">
+    <div class="pop-body">
+      <div class="pop-name">${c.icon} ${s.name}</div>
+      <div class="pop-loc">${s.location}${d}</div>
+      <div class="pop-price">${p} <span style="font-size:11px;font-weight:400;color:var(--gray-500)">/มื้อ</span></div>
+      <div style="font-size:12px;color:var(--gray-500)">ความคุ้มค่า: ${'★'.repeat(s.value||0)}${'☆'.repeat(5-(s.value||0))}</div>
+    </div>
+    <button class="pop-btn" onclick="openDet(${s.id})">ดูรายละเอียด →</button>`;
+}
+
+// ── LOCATION ────────────────────────────────────────────
+function locateMe(){
+  if(!navigator.geolocation){showToast('เบราว์เซอร์นี้ไม่รองรับ GPS ครับ');return;}
+  const btn=document.getElementById('btn-loc');
+  const icon=document.getElementById('loc-icon');
+  btn.classList.add('loading');
+  icon.className='fa fa-spinner';
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+      btn.classList.remove('loading'); btn.classList.add('active');
+      icon.className='fa fa-location-dot';
+      if(userMarker) map.removeLayer(userMarker);
+      userMarker=L.marker([userLat,userLng],{
+        icon:L.divIcon({html:'<div class="my-dot"></div>',iconSize:[18,18],iconAnchor:[9,9],className:''}),
+        zIndexOffset:1000
+      }).addTo(map).bindPopup('<div style="font-family:var(--font);font-size:13px;font-weight:600;padding:4px 8px">📍 ตำแหน่งของคุณ</div>').openPopup();
+      map.setView([userLat,userLng],14);
+      renderCards();
+      showToast('พบตำแหน่งของคุณแล้ว! 📍 แสดงระยะทางในรายการแล้ว');
+    },
+    err=>{
+      btn.classList.remove('loading');
+      icon.className='fa fa-location-crosshairs';
+      const msgs={1:'กรุณาอนุญาต GPS ในเบราว์เซอร์ก่อนนะครับ',2:'ไม่พบสัญญาณ GPS',3:'หมดเวลาดึงตำแหน่ง'};
+      showToast(msgs[err.code]||'ไม่สามารถดึงตำแหน่งได้');
+    },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+  );
+}
+
+function haversine(a,b,c,d){
+  const R=6371,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function fmtDist(km){return km<1?`${Math.round(km*1000)} ม.`:`${km.toFixed(1)} กม.`;}
+
+// ── CARDS ────────────────────────────────────────────────
+function renderCards(){
+  let list=getShops();
+  if(sortMode==="price") list.sort((a,b)=>a.priceMin-b.priceMin);
+  else if(sortMode==="rating") list.sort((a,b)=>b.rating-a.rating);
+  else if(sortMode==="distance"&&userLat)
+    list.sort((a,b)=>haversine(userLat,userLng,a.lat,a.lng)-haversine(userLat,userLng,b.lat,b.lng));
+  document.getElementById('cnt').textContent=`${list.length} ร้าน`;
+  const el=document.getElementById('shop-list');
+  if(!list.length){el.innerHTML=`<div class="no-results"><i class="fa fa-search"></i><p>ไม่พบร้านที่ค้นหา</p></div>`;return;}
+  el.innerHTML=list.map(cardHtml).join('');
+}
+
+function getShops(){
+  return shops.filter(s=>{
+    if(s.status!=="approved") return false;
+    const mc=filterCat==="all"||s.cat===filterCat;
+    const q=searchQ.toLowerCase();
+    return mc&&(!q||s.name.toLowerCase().includes(q)||s.location.toLowerCase().includes(q));
+  });
+}
+
+function cardHtml(s){
+  const c=CAT[s.cat];
+  const p=s.priceMin===s.priceMax?`${s.priceMin}฿`:`${s.priceMin}–${s.priceMax}฿`;
+  const dist=userLat?`<div class="dist-pill"><i class="fa fa-location-dot"></i>${fmtDist(haversine(userLat,userLng,s.lat,s.lng))}</div>`:'';
+  const sel=selId===s.id?' sel':'';
+  const valPct=(s.value||0)/5*100;
+  return `<div class="shop-card${sel}" id="card-${s.id}" onclick="openDet(${s.id})">
+    <img class="card-img" src="${s.cover}" loading="lazy" onerror="this.style.display='none'" alt="">
+    <div class="card-body">
+      <div class="card-row1">
+        <div class="cat-icon" style="background:${c.color}20">${c.icon}</div>
+        <div class="card-mid">
+          <div class="card-name">${s.name}</div>
+          <div class="card-loc"><i class="fa fa-location-dot" style="color:${c.color}"></i> ${s.location}</div>
+          ${dist}
+        </div>
+        <div class="card-r">
+          <div class="card-price">${p}<small>/มื้อ</small></div>
+          <div class="mini-stars">${starsHtml(s.rating)}</div>
+          <div style="font-size:9px;color:var(--gray-500);text-align:right">(${s.reviews})</div>
+        </div>
+      </div>
+      <div class="value-row">
+        <span class="val-label">คุ้มค่า</span>
+        <div class="val-bar"><div class="val-fill" style="width:${valPct}%"></div></div>
+        <span style="font-size:11px;color:var(--gray-500)">${s.value||0}/5</span>
+      </div>
+      <div class="card-foot">
+        <span style="font-size:11px;color:var(--gray-500)">${PARKING[s.parking]||''}</span>
+        <div class="foot-btns" onclick="event.stopPropagation()">
+          <button class="btn-xs btn-share" onclick="shareShop(${s.id})"><i class="fa fa-share-nodes"></i> แชร์</button>
+          <button class="btn-xs btn-flag" onclick="flagShop(${s.id})"><i class="fa fa-flag"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function starsHtml(r){
+  let h='';
+  for(let i=1;i<=5;i++){
+    if(i<=Math.floor(r)) h+=`<i class="fa fa-star"></i>`;
+    else if(i-r<1) h+=`<i class="fa fa-star-half-stroke"></i>`;
+    else h+=`<i class="fa fa-star" style="color:var(--gray-200)"></i>`;
+  }
+  return h;
+}
+
+function scrollToCard(id){const el=document.getElementById(`card-${id}`);if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function selShop(id){selId=id;renderCards();}
+
+// ── FILTER/SORT ──────────────────────────────────────────
+function setFilter(cat,btn){
+  filterCat=cat;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on');
+  renderCards();syncMarkers();
+}
+function doSearch(){searchQ=document.getElementById('search-input').value;renderCards();syncMarkers();}
+function setSort(m,btn){
+  sortMode=m;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(m==='distance'&&!userLat){showToast('กรุณาเปิดตำแหน่งก่อนนะครับ 📍');return;}
+  renderCards();
+}
+function syncMarkers(){
+  const ids=getShops().map(s=>s.id);
+  shops.forEach(s=>{
+    if(!markers[s.id]) return;
+    if(ids.includes(s.id)){if(!map.hasLayer(markers[s.id]))markers[s.id].addTo(map);}
+    else map.removeLayer(markers[s.id]);
+  });
+}
+
+// ── DETAIL ───────────────────────────────────────────────
+function openDet(id){
+  const s=shops.find(x=>x.id===id); if(!s) return;
+  selShop(id);
+  if(map&&markers[id]){map.setView([s.lat,s.lng],15);markers[id].openPopup();}
+  const c=CAT[s.cat];
+  const p=s.priceMin===s.priceMax?`${s.priceMin}฿`:`${s.priceMin}–${s.priceMax}฿`;
+  const distHtml=userLat?`<span class="dist-pill" style="font-size:12px;padding:3px 9px"><i class="fa fa-location-dot"></i> ห่าง ${fmtDist(haversine(userLat,userLng,s.lat,s.lng))}</span>`:'';
+  const menus=s.menus.length?`<div class="sec"><div class="sec-t">เมนูอาหาร</div>
+    <div class="menu-scroll">${s.menus.map(m=>`<div class="menu-card">
+      <img class="menu-img" src="${m.img}" loading="lazy" onerror="this.src=''" alt="">
+      <div class="menu-name">${m.name}</div><div class="menu-price">${m.price}฿</div>
+    </div>`).join('')}</div></div>`:'';
+  const valPct=(s.value||0)/5*100;
+  const revs=s.reviewList.map((r,i)=>`<div class="rev-item">
+    <div class="rev-top">
+      <span class="rev-name">${r.name}</span>
+      <div class="rev-stars">${'<i class="fa fa-star"></i>'.repeat(r.stars)}${'<i class="fa fa-star" style="color:var(--gray-200)"></i>'.repeat(5-r.stars)}</div>
+    </div>
+    <div class="rev-text">${r.text}</div>
+    <div class="rev-date">${r.date} · <a href="#" onclick="flagRev(${s.id},${i});return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
+  </div>`).join('');
+  const wonBtn=s.wongnai?`<div class="sec"><a class="btn-wongnai" href="${s.wongnai}" target="_blank"><i class="fa fa-magnifying-glass"></i> ดูเพิ่มเติมบน Wongnai</a></div>`:'';
+  document.getElementById('det-body').innerHTML=`
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('det-modal')"><i class="fa fa-times"></i></button>
+    <img class="det-cover" src="${s.cover}" onerror="this.style.display='none'" alt="">
+    <div class="det-hdr">
+      <div class="det-icon" style="background:${c.color}20">${c.icon}</div>
+      <div>
+        <div class="det-name">${s.name}</div>
+        <div class="det-loc"><i class="fa fa-location-dot" style="color:${c.color}"></i> ${s.location} · ${c.label}</div>
+        ${distHtml}
+      </div>
+    </div>
+    <div class="det-price-row">
+      <div class="det-price">${p} <small>/มื้อ</small></div>
+      <div>
+        <div class="det-stars">${starsHtml(s.rating)}<span>${s.rating} (${s.reviews})</span></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+          <span style="font-size:11px;color:var(--gray-500)">คุ้มค่า</span>
+          <div class="val-bar" style="width:80px"><div class="val-fill" style="width:${valPct}%"></div></div>
+          <span style="font-size:11px;color:var(--gray-500)">${s.value||0}/5</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-t">เกี่ยวกับร้าน</div><p style="font-size:14px;color:var(--gray-700);line-height:1.6">${s.desc}</p></div>
+    ${menus}
+    <div class="sec"><div class="sec-t">ข้อมูลเพิ่มเติม</div>
+      <div class="info-grid">
+        <div class="info-box"><div class="info-lbl">ที่จอดรถ</div><div class="info-val">${PARKING[s.parking]||'-'}</div></div>
+        <div class="info-box"><div class="info-lbl">รีวิวทั้งหมด</div><div class="info-val">${s.reviews} รีวิว</div></div>
+      </div>
+    </div>
+    ${wonBtn}
+    <div class="sec"><div class="sec-t">รีวิวจากผู้ใช้</div>
+      ${revs}
+      <div class="rev-form">
+        <div class="rev-form-t">✍️ เขียนรีวิวของคุณ</div>
+        <div class="star-pick" id="sp-${id}">${[1,2,3,4,5].map(n=>`<i class="fa fa-star" data-v="${n}" onclick="pickStar(${id},${n})"></i>`).join('')}</div>
+        <input type="text" class="form-inp" id="rn-${id}" placeholder="ชื่อของคุณ" style="margin-bottom:7px">
+        <textarea class="form-ta" id="rt-${id}" placeholder="บอกเพื่อนๆ ว่าคุ้มแค่ไหน..." style="min-height:55px"></textarea>
+        <button class="btn-submit" style="padding:10px;font-size:14px;margin-top:7px" onclick="subRev(${id})">ส่งรีวิว</button>
+      </div>
+    </div>
+    <div class="det-actions">
+      <button class="act-btn act-gray" onclick="shareShop(${id})"><i class="fa fa-share-nodes"></i> แชร์</button>
+      <button class="act-btn act-red" onclick="flagShop(${id})"><i class="fa fa-flag"></i> รายงาน</button>
+    </div>`;
+  openModal('det-modal');
+}
+
+function pickStar(sid,v){
+  starPicks[sid]=v;
+  document.querySelectorAll(`#sp-${sid} i`).forEach(i=>i.classList.toggle('on',+i.dataset.v<=v));
+}
+
+function subRev(sid){
+  const txt=document.getElementById(`rt-${sid}`).value.trim();
+  const st=starPicks[sid]||0;
+  const nm=document.getElementById(`rn-${sid}`).value.trim()||'ผู้ใช้ไม่ระบุชื่อ';
+  if(!txt){showToast('กรุณาเขียนรีวิวก่อนนะครับ');return;}
+  if(!st){showToast('กรุณาให้ดาวก่อนนะครับ ⭐');return;}
+  const s=shops.find(x=>x.id===sid);
+  s.reviewList.unshift({name:nm,stars:st,text:txt,date:'เมื่อกี้'});
+  s.reviews++;
+  showToast('ขอบคุณสำหรับรีวิว! 🙏');
+  setTimeout(()=>openDet(sid),400);
+}
+
+function flagRev(sid,idx){
+  reportedReviews.push({shopId:sid,revIdx:idx,at:'เมื่อกี้'});
+  showToast('รายงานรีวิวแล้ว 🙏');
+}
+
+// ── SHARE / FLAG ────────────────────────────────────────
+function shareShop(id){
+  const s=shops.find(x=>x.id===id);
+  const t=`[2RichMap] ${s.name} — ${s.priceMin}-${s.priceMax}฿ ที่ ${s.location}`;
+  navigator.share?navigator.share({title:s.name,text:t,url:location.href})
+    :navigator.clipboard.writeText(t).then(()=>showToast('คัดลอกแล้ว! 📋'));
+}
+function flagShop(id){
+  const s=shops.find(x=>x.id===id);
+  if(s) s.reportCount=(s.reportCount||0)+1;
+  showToast('รายงานแล้ว ขอบคุณที่ช่วยตรวจสอบ 🙏');
+  closeModal('det-modal');
+}
+
+// ── ADD SHOP ────────────────────────────────────────────
+function openAddModal(){
+  // Reset form
+  document.getElementById('add-form').style.display='block';
+  document.getElementById('add-success').style.display='none';
+  ['f-name','f-loc','f-min','f-max','f-desc'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('f-cat').value='';
+  document.getElementById('f-park').value='no';
+  document.getElementById('preview-grid').innerHTML='';
+  uploadedImgs=[];
+  valPick=0;
+  pinLat=null; pinLng=null;
+  document.querySelectorAll('#val-pick i').forEach(i=>i.classList.remove('on'));
+  document.getElementById('val-label').textContent='กดดาวเพื่อให้คะแนนความคุ้มค่า';
+  document.getElementById('pin-status').className='pin-status';
+  document.getElementById('pin-status').innerHTML='<i class="fa fa-circle-info"></i> คลิกบนแผนที่เพื่อปักหมุดตำแหน่งร้าน';
+  openModal('add-modal');
+  // Init pin map after modal opens
+  setTimeout(initPinMap, 350);
+}
+
+let pinMapInited=false;
+function initPinMap(){
+  if(!pinMapInited){
+    pinMap=L.map('pin-map',{zoomControl:true}).setView([13.756,100.502],12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {attribution:'© OpenStreetMap'}).addTo(pinMap);
+    pinMap.on('click',e=>{
+      pinLat=e.latlng.lat; pinLng=e.latlng.lng;
+      if(pinMarker) pinMap.removeLayer(pinMarker);
+      pinMarker=L.marker([pinLat,pinLng]).addTo(pinMap);
+      const st=document.getElementById('pin-status');
+      st.className='pin-status set';
+      st.innerHTML=`<i class="fa fa-check-circle"></i> ปักหมุดแล้ว: ${pinLat.toFixed(5)}, ${pinLng.toFixed(5)}`;
+    });
+    pinMapInited=true;
+  } else {
+    pinMap.invalidateSize();
+    // Center on user location if available
+    if(userLat) pinMap.setView([userLat,userLng],14);
+  }
+}
+
+function pickVal(v){
+  valPick=v;
+  document.querySelectorAll('#val-pick i').forEach(i=>i.classList.toggle('on',+i.dataset.v<=v));
+  document.getElementById('val-label').textContent=`ความคุ้มค่า: ${VALLABELS[v]}`;
+}
+
+// Image upload
+function handleFiles(files){
+  [...files].forEach(f=>{
+    if(!f.type.startsWith('image/')) return;
+    const r=new FileReader();
+    r.onload=e=>{
+      uploadedImgs.push(e.target.result);
+      renderPreviews();
+    };
+    r.readAsDataURL(f);
+  });
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function renderPreviews(){
+  document.getElementById('preview-grid').innerHTML=uploadedImgs.map((src,i)=>`
+    <div class="preview-thumb">
+      <img src="${src}" alt="">
+      <button class="preview-rm" onclick="removeImg(${i})"><i class="fa fa-times"></i></button>
+    </div>`).join('');
+}
+function removeImg(i){uploadedImgs.splice(i,1);renderPreviews();}
+
+function submitShop(){
+  const name=document.getElementById('f-name').value.trim();
+  const cat=document.getElementById('f-cat').value;
+  const loc=document.getElementById('f-loc').value.trim();
+  if(!name||!cat||!loc){showToast('กรุณากรอกชื่อร้าน, หมวดหมู่, และย่านก่อนนะครับ');return;}
+  if(!pinLat){showToast('กรุณาปักหมุดตำแหน่งร้านบนแผนที่ก่อนนะครับ 📍');return;}
+  const pMin=parseInt(document.getElementById('f-min').value)||0;
+  const pMax=parseInt(document.getElementById('f-max').value)||pMin;
+  const park=document.getElementById('f-park').value;
+  const desc=document.getElementById('f-desc').value.trim();
+  const cover=uploadedImgs[0]||`https://picsum.photos/seed/${Date.now()}/800/400`;
+  const menus=uploadedImgs.slice(1).map((img,i)=>({name:`เมนู ${i+1}`,price:0,img}));
+  pendingShops.push({
+    id:Date.now(),name,cat,location:loc,lat:pinLat,lng:pinLng,
+    priceMin:pMin,priceMax:pMax,rating:0,reviews:0,value:valPick,
+    status:"pending",reportCount:0,parking:park,cover,menus,desc,wongnai:'',
+    reviewList:[],submittedAt:'เมื่อกี้'
+  });
+  document.getElementById('add-form').style.display='none';
+  document.getElementById('add-success').style.display='block';
+}
+
+// ── MODAL HELPERS ────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeOnBg(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+
+// ── ADMIN ────────────────────────────────────────────────
+function openAdminGate(){
+  if(isAdmin){renderAdmin();openModal('admin-modal');return;}
+  document.getElementById('admin-pw').value='';
+  document.getElementById('pw-err').style.display='none';
+  openModal('pw-modal');
+}
+function checkPw(){
+  if(document.getElementById('admin-pw').value===PW){
+    isAdmin=true;
+    closeModal('pw-modal');
+    renderAdmin();
+    openModal('admin-modal');
+  } else {
+    document.getElementById('pw-err').style.display='block';
+  }
+}
+function adminLogout(){isAdmin=false;closeModal('admin-modal');showToast('ออกจากระบบ Admin แล้ว');}
+
+function switchAdmTab(t,btn){
+  document.querySelectorAll('.adm-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.adm-sec').forEach(s=>s.classList.remove('on'));
+  document.getElementById(`adm-${t}`).classList.add('on');
+}
+
+function renderAdmin(){
+  const approved=shops.filter(s=>s.status==="approved");
+  const repShops=shops.filter(s=>(s.reportCount||0)>0);
+  document.getElementById('adm-stats').innerHTML=`
+    <div class="stat-box"><div class="stat-n">${approved.length}</div><div class="stat-l">ร้านทั้งหมด</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:#E65100">${pendingShops.length}</div><div class="stat-l">รอตรวจสอบ</div></div>
+    <div class="stat-box"><div class="stat-n" style="color:var(--red)">${repShops.length+reportedReviews.length}</div><div class="stat-l">รายงาน</div></div>`;
+  document.getElementById('adm-pend-cnt').textContent=pendingShops.length;
+  document.getElementById('adm-rep-cnt').textContent=repShops.length+reportedReviews.length;
+
+  document.getElementById('adm-all').innerHTML=approved.map(s=>`
+    <div class="adm-row">
+      <img class="adm-thumb" src="${s.cover}" onerror="this.style.background='var(--gray-200)'" alt="">
+      <div class="adm-info">
+        <div class="adm-name">${CAT[s.cat]?.icon} ${s.name}
+          <span class="st-pill st-ok">เปิดใช้งาน</span>
+          ${(s.reportCount||0)>0?`<span class="st-pill st-rep">⚠️ รายงาน ${s.reportCount}</span>`:''}
+        </div>
+        <div class="adm-meta">${s.location} · ${s.priceMin}-${s.priceMax}฿ · ⭐${s.rating} (${s.reviews}) · คุ้มค่า ${s.value||0}/5</div>
+      </div>
+      <div class="adm-btns">
+        <button class="btn-ed" onclick="adminEdit(${s.id})">✏️ แก้ไข</button>
+        <button class="btn-no" onclick="adminDel(${s.id})">🗑️ ลบ</button>
+      </div>
+    </div>`).join('')||'<div class="empty-msg">ไม่มีร้าน</div>';
+
+  document.getElementById('adm-pending').innerHTML=pendingShops.length
+    ?pendingShops.map(s=>`
+    <div class="adm-row" id="pr-${s.id}">
+      <img class="adm-thumb" src="${s.cover}" onerror="this.style.background='var(--gray-200)'" alt="">
+      <div class="adm-info">
+        <div class="adm-name">${CAT[s.cat]?.icon||'🍽️'} ${s.name} <span class="st-pill st-wait">รอตรวจสอบ</span></div>
+        <div class="adm-meta">${s.location} · ${s.priceMin}-${s.priceMax}฿ · คุ้มค่า ${s.value||0}/5</div>
+        ${s.desc?`<div style="font-size:11px;color:var(--gray-700);margin-top:3px">${s.desc}</div>`:''}
+        <div class="adm-meta">📍 ${s.lat?.toFixed(4)}, ${s.lng?.toFixed(4)} · ${s.submittedAt}</div>
+      </div>
+      <div class="adm-btns">
+        <button class="btn-ok" onclick="adminApprove(${s.id})">✅ อนุมัติ</button>
+        <button class="btn-no" onclick="adminReject(${s.id})">❌ ปฏิเสธ</button>
+      </div>
+    </div>`).join('')
+    :'<div class="empty-msg">✅ ไม่มีร้านรอตรวจสอบ</div>';
+
+  const repRows=repShops.map(s=>`
+    <div class="adm-row">
+      <img class="adm-thumb" src="${s.cover}" onerror="this.style.background='var(--gray-200)'" alt="">
+      <div class="adm-info">
+        <div class="adm-name">🚩 ${s.name} <span class="st-pill st-rep">รายงาน ${s.reportCount} ครั้ง</span></div>
+        <div class="adm-meta">${s.location}</div>
+      </div>
+      <div class="adm-btns">
+        <button class="btn-ed" onclick="adminClearRep(${s.id})">✅ ตรวจแล้ว</button>
+        <button class="btn-no" onclick="adminDel(${s.id})">🗑️ ลบ</button>
+      </div>
+    </div>`).join('');
+  const revRows=reportedReviews.map((r,ri)=>{
+    const s=shops.find(x=>x.id===r.shopId);
+    const rv=s?.reviewList[r.revIdx];
+    if(!rv) return '';
+    return `<div class="adm-row">
+      <div class="adm-info">
+        <div class="adm-name">💬 "${rv.name}" ใน ${s.name}</div>
+        <div class="adm-meta">"${rv.text}" · ${r.at}</div>
+      </div>
+      <div class="adm-btns">
+        <button class="btn-ok" onclick="adminKeepRev(${ri})">✅ เก็บ</button>
+        <button class="btn-no" onclick="adminDelRev(${r.shopId},${r.revIdx},${ri})">🗑️ ลบ</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('adm-reported').innerHTML=(repRows+revRows)||'<div class="empty-msg">✅ ไม่มีรายงาน</div>';
+}
+
+function adminApprove(id){
+  const i=pendingShops.findIndex(s=>s.id===id); if(i<0) return;
+  const s={...pendingShops[i],status:'approved'};
+  shops.push(s); addMarker(s);
+  pendingShops.splice(i,1);
+  renderCards(); renderAdmin();
+  showToast(`อนุมัติ "${s.name}" แล้ว ✅`);
+}
+function adminReject(id){
+  const i=pendingShops.findIndex(s=>s.id===id); if(i<0) return;
+  const n=pendingShops[i].name;
+  pendingShops.splice(i,1);
+  renderAdmin();
+  showToast(`ปฏิเสธ "${n}" แล้ว`);
+}
+function adminDel(id){
+  if(!confirm('ยืนยันลบร้านนี้?')) return;
+  const i=shops.findIndex(s=>s.id===id); if(i<0) return;
+  const n=shops[i].name;
+  if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
+  shops.splice(i,1);
+  renderCards(); renderAdmin();
+  showToast(`ลบ "${n}" แล้ว`);
+}
+function adminEdit(id){
+  const s=shops.find(x=>x.id===id); if(!s) return;
+  const n=prompt('ชื่อร้าน:',s.name); if(!n) return;
+  const mn=prompt('ราคาต่ำสุด (฿):',s.priceMin);
+  const mx=prompt('ราคาสูงสุด (฿):',s.priceMax);
+  const v=prompt('ความคุ้มค่า (1-5):',s.value||0);
+  s.name=n;
+  s.priceMin=parseInt(mn)||s.priceMin;
+  s.priceMax=parseInt(mx)||s.priceMax;
+  s.value=Math.min(5,Math.max(0,parseInt(v)||s.value||0));
+  renderCards(); renderAdmin();
+  showToast(`บันทึก "${s.name}" แล้ว ✅`);
+}
+function adminClearRep(id){const s=shops.find(x=>x.id===id);if(s)s.reportCount=0;renderAdmin();showToast('ล้างรายงานแล้ว ✅');}
+function adminKeepRev(ri){reportedReviews.splice(ri,1);renderAdmin();showToast('เก็บรีวิวไว้แล้ว ✅');}
+function adminDelRev(sid,ri,repIdx){
+  const s=shops.find(x=>x.id===sid);
+  if(s&&s.reviewList[ri]) s.reviewList.splice(ri,1);
+  reportedReviews.splice(repIdx,1);
+  renderAdmin(); showToast('ลบรีวิวแล้ว 🗑️');
+}
+
+// ── MOBILE ───────────────────────────────────────────────
+function switchTab(t){
+  document.getElementById('mnav-map').classList.toggle('on',t==='map');
+  document.getElementById('mnav-list').classList.toggle('on',t==='list');
+  const mw=document.getElementById('map-wrap');
+  const sb=document.getElementById('sidebar');
+  mw.classList.toggle('mob-off',t!=='map');
+  sb.classList.toggle('mob-on',t==='list');
+  if(t==='map'&&map) setTimeout(()=>map.invalidateSize(),100);
+}
+
+// ── TOAST ────────────────────────────────────────────────
+let toastT;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  initMap(); renderCards();
+  if(window.innerWidth<=767) switchTab('map');
+});
+</script>
+</body>
+</html>

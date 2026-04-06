@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "2RichMap",
+      "runtimeExecutable": "/usr/local/Cellar/node/25.8.2/bin/node",
+      "runtimeArgs": ["/usr/local/bin/npx", "serve", "-l", "7788"],
+      "port": 7788
+    }
+  ]
+}
