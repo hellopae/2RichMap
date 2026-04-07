@@ -413,6 +413,178 @@
       .hdr-btn-ghost{padding:8px 10px}
     }
     @media(min-width:768px) and (max-width:1023px){#sidebar{width:330px}}
+
+    /* ── PRICE FILTER MODAL ── */
+    #filter-modal .modal{max-width:480px}
+    .filter-modal-title{font-size:22px;font-weight:800;margin-bottom:4px}
+    .filter-modal-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px}
+
+    /* Dual range slider */
+    .range-wrap{background:var(--gray-50);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+    .range-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .range-label-text{font-size:14px;font-weight:600;color:var(--gray-700)}
+    .range-val-badge{font-size:14px;font-weight:700;color:var(--green)}
+    .slider-track{position:relative;height:6px;background:var(--gray-200);border-radius:3px;margin:8px 0 4px}
+    .slider-range{position:absolute;height:100%;background:var(--green);border-radius:3px}
+    .range-input{position:absolute;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;top:0;left:0}
+    .range-thumb{position:absolute;width:22px;height:22px;background:#fff;border:2.5px solid var(--green);
+      border-radius:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
+      box-shadow:0 2px 6px rgba(0,0,0,.18);transition:border-color .15s}
+    .range-minmax{display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);margin-top:8px}
+    .dual-slider{position:relative;height:24px;margin:4px 0}
+    .dual-slider input[type=range]{
+      position:absolute;width:100%;height:6px;top:50%;transform:translateY(-50%);
+      -webkit-appearance:none;appearance:none;background:transparent;pointer-events:none;
+      outline:none;margin:0
+    }
+    .dual-slider input[type=range]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+      background:#fff;border:2.5px solid var(--green);cursor:pointer;pointer-events:all;
+      box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .1s
+    }
+    .dual-slider input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+    .dual-slider input[type=range]::-moz-range-thumb{
+      width:22px;height:22px;border-radius:50%;background:#fff;
+      border:2.5px solid var(--green);cursor:pointer;pointer-events:all;box-shadow:0 2px 6px rgba(0,0,0,.18)
+    }
+    .slider-bg{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+      height:6px;background:var(--gray-200);border-radius:3px;pointer-events:none}
+    .slider-fill{position:absolute;top:50%;transform:translateY(-50%);height:6px;
+      background:var(--green);border-radius:3px;pointer-events:none}
+
+    /* Food type chips */
+    .food-chips-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+    .food-chip{
+      padding:8px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
+      background:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
+      color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s;
+      user-select:none
+    }
+    .food-chip:hover{border-color:var(--green);color:var(--green)}
+    .food-chip.on{background:var(--green);border-color:var(--green);color:#fff}
+    .food-chip.on:hover{background:var(--green-light)}
+    .food-type-note{font-size:12px;color:var(--gray-500);margin-top:8px}
+    .food-type-note span{color:var(--green);font-weight:600}
+
+    /* Filter apply btn */
+    .btn-apply-filter{
+      width:100%;padding:14px;background:var(--gray-900);color:#fff;border:none;
+      border-radius:12px;font-family:var(--font);font-size:16px;font-weight:700;
+      cursor:pointer;margin-top:16px;transition:background .15s;display:flex;
+      align-items:center;justify-content:center;gap:8px
+    }
+    .btn-apply-filter:hover{background:#333}
+    .btn-reset-filter{
+      width:100%;padding:10px;background:transparent;color:var(--gray-500);border:1.5px solid var(--gray-200);
+      border-radius:12px;font-family:var(--font);font-size:14px;font-weight:600;
+      cursor:pointer;margin-top:8px;transition:all .15s
+    }
+    .btn-reset-filter:hover{border-color:var(--red);color:var(--red)}
+
+    /* Filter active indicator */
+    .filter-active-dot{
+      width:7px;height:7px;border-radius:50%;background:var(--red);
+      display:inline-block;margin-left:4px;vertical-align:middle
+    }
+    .btn-filter-open{
+      flex-shrink:0;display:flex;align-items:center;gap:5px;padding:5px 12px;
+      border-radius:20px;border:1.5px solid var(--gray-200);background:#fff;
+      cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;
+      color:var(--gray-700);transition:all .15s;white-space:nowrap
+    }
+    .btn-filter-open:hover{border-color:var(--green);color:var(--green)}
+    .btn-filter-open.active{border-color:var(--green);color:var(--green);background:var(--green-pale)}
+
+    /* ── COMMUNITY BOARD ── */
+    #community-panel{
+      display:none;flex-direction:column;
+      width:100%;height:100%;background:var(--gray-50);overflow:hidden
+    }
+    #community-panel.on{display:flex}
+    .comm-head{
+      background:#fff;border-bottom:1px solid var(--gray-200);
+      padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0
+    }
+    .comm-head-title{font-size:15px;font-weight:800;flex:1}
+    .comm-tabs{display:flex;gap:0;border-bottom:1px solid var(--gray-200);background:#fff;flex-shrink:0}
+    .comm-tab{
+      flex:1;padding:10px;border:none;background:transparent;font-family:var(--font);
+      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
+      border-bottom:2px solid transparent;transition:all .15s
+    }
+    .comm-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .comm-list{flex:1;overflow-y:auto;padding:10px}
+    .comm-list::-webkit-scrollbar{width:3px}
+    .comm-list::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px}
+
+    /* Post card */
+    .post-card{
+      background:#fff;border:1.5px solid var(--gray-200);border-radius:12px;
+      padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s
+    }
+    .post-card:hover{border-color:var(--green);box-shadow:var(--shadow)}
+    .post-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .post-avatar{
+      width:28px;height:28px;border-radius:50%;background:var(--green);
+      display:flex;align-items:center;justify-content:center;color:#fff;
+      font-size:12px;font-weight:700;flex-shrink:0
+    }
+    .post-author{font-size:12px;font-weight:600;color:var(--gray-700)}
+    .post-time{font-size:11px;color:var(--gray-500);margin-left:auto}
+    .post-title{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gray-900)}
+    .post-body{font-size:13px;color:var(--gray-700);line-height:1.5;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .post-footer{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--gray-100)}
+    .post-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
+    .tag-tip{background:#E3F2FD;color:#1565C0}
+    .tag-deal{background:#FFF8E1;color:#E65100}
+    .tag-question{background:#F3E5F5;color:#6A1B9A}
+    .tag-review{background:var(--green-pale);color:var(--green)}
+    .vote-btn{
+      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
+      border:1.5px solid var(--gray-200);background:#fff;cursor:pointer;
+      font-family:var(--font);font-size:12px;font-weight:600;color:var(--gray-700);
+      transition:all .15s
+    }
+    .vote-btn:hover{border-color:var(--orange,#FB8C00);color:var(--orange,#FB8C00)}
+    .vote-btn.voted{border-color:var(--orange,#FB8C00);background:#FFF3E0;color:#E65100}
+    .comment-count{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:3px;margin-left:auto}
+
+    /* Post detail overlay */
+    #post-modal .modal{max-width:600px}
+    .post-detail-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
+    .post-detail-body{font-size:14px;color:var(--gray-700);line-height:1.7;margin-bottom:16px}
+    .post-comments{border-top:1px solid var(--gray-200);padding-top:14px}
+    .comment-item{background:var(--gray-50);border-radius:8px;padding:10px;margin-bottom:8px}
+    .comment-author{font-size:12px;font-weight:600;margin-bottom:3px}
+    .comment-text{font-size:13px;color:var(--gray-700);line-height:1.5}
+    .comment-form{display:flex;gap:8px;margin-top:12px}
+    .comment-input{
+      flex:1;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:20px;
+      font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s
+    }
+    .comment-input:focus{border-color:var(--green)}
+    .btn-comment-send{
+      padding:9px 16px;background:var(--green);color:#fff;border:none;
+      border-radius:20px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer
+    }
+
+    /* New post form */
+    .new-post-btn{
+      width:100%;padding:12px;background:var(--green);color:#fff;border:none;
+      border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+      margin-bottom:10px;transition:background .15s
+    }
+    .new-post-btn:hover{background:var(--green-light)}
+    #new-post-modal .modal{max-width:480px}
+    .tag-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .tag-opt{
+      padding:5px 12px;border-radius:10px;border:1.5px solid var(--gray-200);
+      background:#fff;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;
+      color:var(--gray-700);transition:all .15s
+    }
+    .tag-opt.on{border-color:var(--green);background:var(--green-pale);color:var(--green)}
   </style>
 </head>
 <body>
@@ -429,6 +601,9 @@
   <div class="hdr-btns">
     <button class="hdr-btn hdr-btn-yellow" onclick="openAddModal()">
       <i class="fa fa-plus"></i><span> เพิ่มร้าน</span>
+    </button>
+    <button class="hdr-btn hdr-btn-ghost" id="btn-comm-hdr" onclick="toggleCommunity()">
+      <i class="fa fa-comments"></i><span> ชุมชน</span>
     </button>
     <button class="hdr-btn hdr-btn-ghost" onclick="openAdminGate()">
       <i class="fa fa-shield-halved"></i><span> Admin</span>
@@ -449,6 +624,9 @@
     </button>
   </div>
   <div class="filter-row">
+    <button class="btn-filter-open" id="btn-price-filter" onclick="openFilterModal()">
+      <i class="fa fa-sliders"></i> ตัวกรอง <span id="filter-active-dot" style="display:none" class="filter-active-dot"></span>
+    </button>
     <button class="chip on" data-cat="all" onclick="setFilter('all',this)"><i class="fa fa-border-all"></i> ทั้งหมด</button>
     <button class="chip" data-cat="street" onclick="setFilter('street',this)"><span class="dot" style="background:#FF7043"></span>Street Food</button>
     <button class="chip" data-cat="restaurant" onclick="setFilter('restaurant',this)"><span class="dot" style="background:#1E88E5"></span>ร้านอาหาร</button>
@@ -485,6 +663,24 @@
     </div>
     <div id="shop-list"></div>
   </div>
+
+  <!-- COMMUNITY PANEL (inside #app) -->
+  <div id="community-panel">
+    <div class="comm-head">
+      <span style="font-size:20px">💬</span>
+      <span class="comm-head-title">ชุมชนประหยัด</span>
+      <button class="new-post-btn" style="width:auto;padding:8px 14px;margin-bottom:0;font-size:13px" onclick="openNewPostModal()">
+        <i class="fa fa-pen"></i> โพสต์ใหม่
+      </button>
+    </div>
+    <div class="comm-tabs">
+      <button class="comm-tab on" onclick="switchCommTab('hot',this)">🔥 ยอดนิยม</button>
+      <button class="comm-tab" onclick="switchCommTab('new',this)">🆕 ล่าสุด</button>
+      <button class="comm-tab" onclick="switchCommTab('tip',this)">💡 ทิปประหยัด</button>
+      <button class="comm-tab" onclick="switchCommTab('deal',this)">🏷️ ดีล</button>
+    </div>
+    <div class="comm-list" id="comm-list"></div>
+  </div>
 </div>
 
 <!-- MOBILE NAV -->
@@ -493,6 +689,7 @@
     <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
     <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>รายการ</span></button>
     <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
+    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>ชุมชน</span></button>
   </div>
 </div>
 
@@ -566,9 +763,24 @@
       </div>
 
       <div class="form-g">
-        <label class="form-lbl">📍 จิ้มตำแหน่งร้านบนแผนที่<span class="req">*</span></label>
+        <label class="form-lbl">📍 ระบุตำแหน่งร้าน<span class="req">*</span></label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" class="form-inp" id="addr-search"
+            placeholder="พิมพ์ที่อยู่หรือชื่อสถานที่ เช่น สาทร ซอย 1 กรุงเทพ"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddress()}"
+            style="flex:1">
+          <button type="button" id="addr-btn" onclick="searchAddress()"
+            style="flex-shrink:0;padding:9px 14px;background:var(--green);color:#fff;border:none;
+              border-radius:8px;cursor:pointer;font-size:14px;font-family:var(--font);font-weight:600;
+              display:flex;align-items:center;gap:5px;white-space:nowrap">
+            <i class="fa fa-search"></i> ค้นหา
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px">
+          💡 หรือคลิกบนแผนที่เพื่อปักหมุด · ลากหมุดเพื่อปรับตำแหน่ง
+        </div>
         <div id="pin-map"></div>
-        <div class="pin-status" id="pin-status"><i class="fa fa-circle-info"></i> คลิกบนแผนที่เพื่อปักหมุดตำแหน่งร้าน</div>
+        <div class="pin-status" id="pin-status"><i class="fa fa-circle-info"></i> พิมพ์ที่อยู่แล้วกดค้นหา หรือคลิกบนแผนที่</div>
       </div>
 
       <div class="form-g">
@@ -644,6 +856,107 @@
     <div id="adm-all" class="adm-sec on"></div>
     <div id="adm-pending" class="adm-sec"></div>
     <div id="adm-reported" class="adm-sec"></div>
+  </div>
+</div>
+
+<!-- PRICE FILTER MODAL -->
+<div class="overlay" id="filter-modal" onclick="closeOnBg(event,'filter-modal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('filter-modal')"><i class="fa fa-times"></i></button>
+    <div class="filter-modal-title">🔍 ตัวกรองร้านอาหาร</div>
+    <div class="filter-modal-sub">ปรับช่วงราคาและประเภทอาหารที่ต้องการ</div>
+
+    <!-- Price Range -->
+    <div class="range-wrap">
+      <div class="range-label-row">
+        <span class="range-label-text">ช่วงราคาต่อมื้อ</span>
+        <span class="range-val-badge" id="range-display">0฿ — 300฿</span>
+      </div>
+      <div class="dual-slider" id="dual-slider">
+        <div class="slider-bg"></div>
+        <div class="slider-fill" id="slider-fill"></div>
+        <input type="range" id="range-min" min="0" max="300" value="0" step="10" oninput="updateRange()">
+        <input type="range" id="range-max" min="0" max="300" value="300" step="10" oninput="updateRange()">
+      </div>
+      <div class="range-minmax"><span>0฿</span><span>300฿+</span></div>
+    </div>
+
+    <!-- Food Type -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px">ประเภทอาหาร</div>
+      <div class="food-type-note">เลือกได้สูงสุด <span>3</span> ประเภท</div>
+      <div class="food-chips-grid" id="food-chips">
+        <div class="food-chip" data-type="ข้าว" onclick="toggleFoodType(this)">🍚 ข้าว</div>
+        <div class="food-chip" data-type="ก๋วยเตี๋ยว" onclick="toggleFoodType(this)">🍜 ก๋วยเตี๋ยว</div>
+        <div class="food-chip" data-type="ส้มตำ/อีสาน" onclick="toggleFoodType(this)">🌶️ ส้มตำ/อีสาน</div>
+        <div class="food-chip" data-type="ข้าวต้ม/โจ๊ก" onclick="toggleFoodType(this)">🥣 ข้าวต้ม/โจ๊ก</div>
+        <div class="food-chip" data-type="หมูปิ้ง/ข้าวเหนียว" onclick="toggleFoodType(this)">🍢 หมูปิ้ง</div>
+        <div class="food-chip" data-type="กะเพรา/ผัด" onclick="toggleFoodType(this)">🥘 กะเพรา/ผัด</div>
+        <div class="food-chip" data-type="ข้าวมันไก่" onclick="toggleFoodType(this)">🐓 ข้าวมันไก่</div>
+        <div class="food-chip" data-type="อาหารทะเล" onclick="toggleFoodType(this)">🦐 อาหารทะเล</div>
+        <div class="food-chip" data-type="มังสวิรัติ" onclick="toggleFoodType(this)">🥬 มังสวิรัติ</div>
+        <div class="food-chip" data-type="ขนม/ของหวาน" onclick="toggleFoodType(this)">🍮 ของหวาน</div>
+        <div class="food-chip" data-type="เครื่องดื่ม" onclick="toggleFoodType(this)">🧃 เครื่องดื่ม</div>
+        <div class="food-chip" data-type="สะดวกซื้อ" onclick="toggleFoodType(this)">🏬 สะดวกซื้อ</div>
+      </div>
+    </div>
+
+    <!-- Parking filter -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">ที่จอดรถ</div>
+      <div class="food-chips-grid">
+        <div class="food-chip" data-type="parking-all" id="fp-all" onclick="toggleParking('all')" style="flex:1">🅿️ ทุกประเภท</div>
+        <div class="food-chip" data-type="parking-yes" id="fp-yes" onclick="toggleParking('yes')" style="flex:1">✅ มีที่จอด</div>
+        <div class="food-chip" data-type="parking-no" id="fp-no" onclick="toggleParking('no')" style="flex:1">🚶 เดินได้</div>
+      </div>
+    </div>
+
+    <button class="btn-apply-filter" onclick="applyFilter()">
+      <i class="fa fa-check"></i> ใช้ตัวกรอง
+    </button>
+    <button class="btn-reset-filter" onclick="resetFilter()">
+      <i class="fa fa-rotate-left"></i> รีเซ็ตทั้งหมด
+    </button>
+  </div>
+</div>
+
+<!-- POST DETAIL MODAL -->
+<div class="overlay" id="post-modal" onclick="closeOnBg(event,'post-modal')">
+  <div class="modal" id="post-body" style="max-width:600px;position:relative">
+    <div class="modal-handle"></div>
+  </div>
+</div>
+
+<!-- NEW POST MODAL -->
+<div class="overlay" id="new-post-modal" onclick="closeOnBg(event,'new-post-modal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('new-post-modal')"><i class="fa fa-times"></i></button>
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px">✍️ โพสต์ใหม่</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">แชร์ทิปประหยัด ดีล หรือถามเพื่อนๆ</div>
+    <div class="form-g">
+      <label class="form-lbl">หัวข้อ<span class="req">*</span></label>
+      <input type="text" class="form-inp" id="np-title" placeholder="เช่น ข้าวแกง 30 บาทแถวบางซื่อ คุ้มมาก!">
+    </div>
+    <div class="form-g">
+      <label class="form-lbl">ประเภทโพสต์</label>
+      <div class="tag-select" id="np-tags">
+        <div class="tag-opt on" data-tag="tip" onclick="pickTag(this)">💡 ทิปประหยัด</div>
+        <div class="tag-opt" data-tag="deal" onclick="pickTag(this)">🏷️ ดีล/โปรโมชั่น</div>
+        <div class="tag-opt" data-tag="question" onclick="pickTag(this)">❓ ถามชุมชน</div>
+        <div class="tag-opt" data-tag="review" onclick="pickTag(this)">⭐ รีวิวร้าน</div>
+      </div>
+    </div>
+    <div class="form-g">
+      <label class="form-lbl">รายละเอียด<span class="req">*</span></label>
+      <textarea class="form-ta" id="np-body" placeholder="บอกรายละเอียด ที่อยู่ ราคา หรือเทคนิคประหยัด..." style="min-height:100px"></textarea>
+    </div>
+    <div class="form-g">
+      <label class="form-lbl">ชื่อ (ไม่บังคับ — ไม่กรอก = Anonymous)</label>
+      <input type="text" class="form-inp" id="np-author" placeholder="ไม่ระบุชื่อ">
+    </div>
+    <button class="btn-submit" onclick="submitPost()"><i class="fa fa-paper-plane"></i> โพสต์เลย</button>
   </div>
 </div>
 
@@ -1327,15 +1640,270 @@ function adminDelRev(sid,ri,repIdx){
   renderAdmin(); showToast('ลบรีวิวแล้ว 🗑️');
 }
 
+// ── PRICE FILTER ─────────────────────────────────────────
+let priceMin=0, priceMax=300, activeFoodTypes=[], activeParkingFilter='all';
+let pendingPriceMin=0, pendingPriceMax=300, pendingFoodTypes=[], pendingParking='all';
+
+function openFilterModal(){
+  // sync pending to current
+  pendingPriceMin=priceMin; pendingPriceMax=priceMax;
+  pendingFoodTypes=[...activeFoodTypes]; pendingParking=activeParkingFilter;
+  document.getElementById('range-min').value=priceMin;
+  document.getElementById('range-max').value=priceMax;
+  updateRange();
+  // sync food chips
+  document.querySelectorAll('#food-chips .food-chip').forEach(el=>{
+    el.classList.toggle('on', pendingFoodTypes.includes(el.dataset.type));
+  });
+  // sync parking
+  ['all','yes','no'].forEach(v=>{
+    document.getElementById(`fp-${v}`)?.classList.toggle('on', pendingParking===v);
+  });
+  openModal('filter-modal');
+}
+
+function updateRange(){
+  let mn=parseInt(document.getElementById('range-min').value);
+  let mx=parseInt(document.getElementById('range-max').value);
+  if(mn>mx){[mn,mx]=[mx,mn];}
+  pendingPriceMin=mn; pendingPriceMax=mx;
+  const pct1=mn/300*100, pct2=mx/300*100;
+  document.getElementById('slider-fill').style.left=pct1+'%';
+  document.getElementById('slider-fill').style.right=(100-pct2)+'%';
+  document.getElementById('range-display').textContent=
+    (mx>=300 ? `${mn}฿ — ไม่จำกัด` : `${mn}฿ — ${mx}฿`);
+}
+
+function toggleFoodType(el){
+  const t=el.dataset.type;
+  const idx=pendingFoodTypes.indexOf(t);
+  if(idx>=0){ pendingFoodTypes.splice(idx,1); el.classList.remove('on'); }
+  else {
+    if(pendingFoodTypes.length>=3){ showToast('เลือกได้สูงสุด 3 ประเภทครับ'); return; }
+    pendingFoodTypes.push(t); el.classList.add('on');
+  }
+}
+
+function toggleParking(v){
+  pendingParking=v;
+  ['all','yes','no'].forEach(x=>{
+    document.getElementById(`fp-${x}`)?.classList.toggle('on',x===v);
+  });
+}
+
+function applyFilter(){
+  priceMin=pendingPriceMin; priceMax=pendingPriceMax;
+  activeFoodTypes=[...pendingFoodTypes]; activeParkingFilter=pendingParking;
+  const active=priceMin>0||priceMax<300||activeFoodTypes.length>0||activeParkingFilter!=='all';
+  document.getElementById('filter-active-dot').style.display=active?'inline-block':'none';
+  document.getElementById('btn-price-filter').classList.toggle('active',active);
+  closeModal('filter-modal');
+  renderCards(); syncMarkers();
+  const cnt=getShops().length;
+  showToast(`พบ ${cnt} ร้านที่ตรงเงื่อนไข 🔍`);
+}
+
+function resetFilter(){
+  priceMin=0; priceMax=300; activeFoodTypes=[]; activeParkingFilter='all';
+  pendingPriceMin=0; pendingPriceMax=300; pendingFoodTypes=[]; pendingParking='all';
+  document.getElementById('range-min').value=0;
+  document.getElementById('range-max').value=300;
+  updateRange();
+  document.querySelectorAll('#food-chips .food-chip').forEach(el=>el.classList.remove('on'));
+  toggleParking('all');
+  document.getElementById('filter-active-dot').style.display='none';
+  document.getElementById('btn-price-filter').classList.remove('active');
+  closeModal('filter-modal');
+  renderCards(); syncMarkers();
+  showToast('รีเซ็ตตัวกรองแล้ว');
+}
+
+// Override getShops to include price filter
+const _origGetShops = getShops;
+// (patched inline below)
+
+// ── COMMUNITY BOARD ──────────────────────────────────────
+const TAGS={tip:{label:'💡 ทิปประหยัด',cls:'tag-tip'},deal:{label:'🏷️ ดีล',cls:'tag-deal'},
+  question:{label:'❓ ถามชุมชน',cls:'tag-question'},review:{label:'⭐ รีวิวร้าน',cls:'tag-review'}};
+
+let posts=[
+  {id:1,title:'ข้าวแกงแถวหัวลำโพง 35 บาท ข้าวเติมฟรี!',
+   body:'ร้านข้างสถานีรถไฟหัวลำโพง เปิดตี 5 ถึงบ่าย 2 ข้าวเติมได้ไม่อั้น แกงหลายอย่าง แนะนำมาก เดินทางสะดวกมาก นั่งรถไฟฟ้าลงหัวลำโพงแล้วเดินได้เลย',
+   tag:'tip',author:'คนกรุงเทพ',time:'2 ชม. ที่แล้ว',votes:84,voted:false,comments:[
+    {author:'น้องมิว',text:'มาแล้วค่ะ อร่อยมากจริงๆ ข้าวนุ่มมาก'},
+    {author:'พี่ก้อง',text:'ถูกกว่าสะดวกซื้ออีก แนะนำ!'}
+  ]},
+  {id:2,title:'7-11 ซื้อ 2 แถม 1 เมนูข้าวกล่อง ถึง 15 เม.ย. นี้',
+   body:'โปรโมชั่นสาขาทั่วประเทศ เมนูข้าวกล่องทุกประเภท ซื้อ 2 กล่องแถมฟรี 1 กล่อง ราคาเริ่มต้น 25 บาท ใช้กับทุกสาขา ยกเว้นในห้างฯ',
+   tag:'deal',author:'Anonymous',time:'5 ชม. ที่แล้ว',votes:156,voted:false,comments:[
+    {author:'สาวออฟฟิศ',text:'ไปซื้อมาแล้ว ดีลจริงๆ ครับ ขอบคุณที่แชร์'},
+    {author:'หนุ่มหอพัก',text:'ประหยัดได้เกือบ 10 บาท คุ้มมาก'}
+  ]},
+  {id:3,title:'มีใครรู้จักร้านข้าวแกงแถวอนุสาวรีย์ชัยฯ บ้างมั้ย?',
+   body:'ทำงานแถวนี้ใหม่ ยังหาร้านข้าวราคาไม่เกิน 50 บาทไม่เจอเลย มีคนแนะนำได้มั้ยครับ ตอนนี้กินสะดวกซื้อทุกวันแล้ว ไม่ไหวแล้ว 😭',
+   tag:'question',author:'พนักงานใหม่',time:'1 วัน ที่แล้ว',votes:23,voted:false,comments:[
+    {author:'คนย่านนี้',text:'มีร้านในซอยข้างๆ BTS อนุสาวรีย์ครับ ราคา 40 บาท ชื่อ "ข้าวแกงคุณป้า"'},
+    {author:'มนตรี',text:'เดินเข้าซอยรางน้ำ 3 นาที มีเลยครับ ถูกและอิ่มมาก'}
+  ]},
+  {id:4,title:'ตลาดนัดรัชดา vs จตุจักร อันไหนคุ้มกว่ากัน?',
+   body:'ทดสอบมาแล้วทั้งสองที่ สรุปว่ารัชดาถูกกว่าเล็กน้อย แต่จตุจักรมีของให้เลือกมากกว่า ราคาเฉลี่ยต่างกันประมาณ 10-15 บาทต่อมื้อ ใครอยากรู้รายละเอียดถามได้ครับ',
+   tag:'review',author:'นักกินสายประหยัด',time:'2 วัน ที่แล้ว',votes:67,voted:false,comments:[
+    {author:'แม่บ้าน',text:'ขอบคุณสำหรับข้อมูลนะคะ ไปรัชดาดีกว่าแล้วกัน'}
+  ]},
+  {id:5,title:'วิธีกินอาหารครบ 5 หมู่ ราคาไม่เกิน 80 บาทต่อวัน',
+   body:'เคล็ดลับ: เช้า - โจ๊กหรือข้าวต้ม 30 บาท, กลางวัน - ข้าวแกง 35-40 บาท เลือกมีโปรตีนและผัก, เย็น - หมูปิ้ง + ข้าวเหนียว 20-25 บาท รวมได้ครบ 5 หมู่ไม่เกิน 80 บาทจริงๆ ครับ',
+   tag:'tip',author:'โภชนาการสายประหยัด',time:'3 วัน ที่แล้ว',votes:203,voted:false,comments:[
+    {author:'คุณแม่',text:'ดีมากเลยค่ะ จะลองทำตามดูนะคะ'},
+    {author:'นักศึกษา',text:'เซฟมากเลยครับ ขอบคุณ!'},
+    {author:'พนักงานโรงงาน',text:'ลองทำตามแล้ว ได้จริงๆ ประหยัดมาก'}
+  ]}
+];
+
+let commTab='hot';
+
+function renderComm(){
+  let list=[...posts];
+  if(commTab==='hot') list.sort((a,b)=>b.votes-a.votes);
+  else if(commTab==='new') list.sort((a,b)=>b.id-a.id);
+  else if(commTab==='tip') list=list.filter(p=>p.tag==='tip');
+  else if(commTab==='deal') list=list.filter(p=>p.tag==='deal');
+  const el=document.getElementById('comm-list');
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--gray-500)">ยังไม่มีโพสต์ในหมวดนี้</div>';return;}
+  el.innerHTML=list.map(p=>{
+    const tg=TAGS[p.tag]||TAGS.tip;
+    return `<div class="post-card" onclick="openPost(${p.id})">
+      <div class="post-meta">
+        <div class="post-avatar">${p.author[0]}</div>
+        <span class="post-author">${p.author}</span>
+        <span class="post-time">${p.time}</span>
+      </div>
+      <div class="post-title">${p.title}</div>
+      <div class="post-body">${p.body}</div>
+      <div class="post-footer">
+        <span class="post-tag ${tg.cls}">${tg.label}</span>
+        <button class="vote-btn ${p.voted?'voted':''}" onclick="event.stopPropagation();votePost(${p.id})">
+          <i class="fa fa-fire"></i> ${p.votes}
+        </button>
+        <span class="comment-count"><i class="fa fa-comment"></i> ${p.comments.length}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchCommTab(t,btn){
+  commTab=t;
+  document.querySelectorAll('.comm-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderComm();
+}
+
+function votePost(id){
+  const p=posts.find(x=>x.id===id); if(!p) return;
+  p.voted=!p.voted;
+  p.votes+=p.voted?1:-1;
+  renderComm();
+  if(p.voted) showToast('🔥 โหวตแล้ว!');
+}
+
+function openPost(id){
+  const p=posts.find(x=>x.id===id); if(!p) return;
+  const tg=TAGS[p.tag]||TAGS.tip;
+  const comHtml=p.comments.map(c=>`
+    <div class="comment-item">
+      <div class="comment-author">${c.author}</div>
+      <div class="comment-text">${c.text}</div>
+    </div>`).join('');
+  document.getElementById('post-body').innerHTML=`
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('post-modal')"><i class="fa fa-times"></i></button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="post-tag ${tg.cls}">${tg.label}</span>
+      <span style="font-size:11px;color:var(--gray-500)">${p.author} · ${p.time}</span>
+    </div>
+    <div class="post-detail-title">${p.title}</div>
+    <div class="post-detail-body">${p.body}</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="vote-btn ${p.voted?'voted':''}" onclick="votePost(${p.id});renderPostModal(${p.id})">
+        <i class="fa fa-fire"></i> ${p.votes} โหวต
+      </button>
+      <span class="comment-count"><i class="fa fa-comment"></i> ${p.comments.length} ความคิดเห็น</span>
+    </div>
+    <div class="post-comments">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">💬 ความคิดเห็น</div>
+      <div id="comments-${id}">${comHtml||'<div style="font-size:13px;color:var(--gray-500);padding:10px 0">ยังไม่มีความคิดเห็น เป็นคนแรกได้เลย!</div>'}</div>
+      <div class="comment-form">
+        <input class="comment-input" id="ci-${id}" placeholder="เขียนความคิดเห็น..." onkeydown="if(event.key==='Enter')sendComment(${id})">
+        <button class="btn-comment-send" onclick="sendComment(${id})"><i class="fa fa-paper-plane"></i></button>
+      </div>
+    </div>`;
+  openModal('post-modal');
+}
+
+function renderPostModal(id){
+  const p=posts.find(x=>x.id===id); if(!p) return;
+  const btn=document.querySelector(`#post-body .vote-btn`);
+  if(btn){btn.className=`vote-btn ${p.voted?'voted':''}`;btn.innerHTML=`<i class="fa fa-fire"></i> ${p.votes} โหวต`;}
+}
+
+function sendComment(id){
+  const inp=document.getElementById(`ci-${id}`);
+  const txt=inp.value.trim(); if(!txt) return;
+  const p=posts.find(x=>x.id===id); if(!p) return;
+  p.comments.push({author:'คุณ',text:txt});
+  inp.value='';
+  const box=document.getElementById(`comments-${id}`);
+  if(box) box.innerHTML+=`<div class="comment-item"><div class="comment-author">คุณ</div><div class="comment-text">${txt}</div></div>`;
+  renderComm();
+  showToast('ส่งความคิดเห็นแล้ว 💬');
+}
+
+// New post
+let selectedTag='tip';
+function pickTag(el){
+  selectedTag=el.dataset.tag;
+  document.querySelectorAll('#np-tags .tag-opt').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+function openNewPostModal(){openModal('new-post-modal');}
+function submitPost(){
+  const title=document.getElementById('np-title').value.trim();
+  const body=document.getElementById('np-body').value.trim();
+  const author=document.getElementById('np-author').value.trim()||'Anonymous';
+  if(!title||!body){showToast('กรุณากรอกหัวข้อและรายละเอียดครับ');return;}
+  const newId=Date.now();
+  posts.unshift({id:newId,title,body,tag:selectedTag,author,time:'เมื่อกี้',votes:0,voted:false,comments:[]});
+  closeModal('new-post-modal');
+  document.getElementById('np-title').value='';
+  document.getElementById('np-body').value='';
+  document.getElementById('np-author').value='';
+  renderComm();
+  showToast('โพสต์สำเร็จ! 🎉');
+}
+
 // ── MOBILE ───────────────────────────────────────────────
 function switchTab(t){
-  document.getElementById('mnav-map').classList.toggle('on',t==='map');
-  document.getElementById('mnav-list').classList.toggle('on',t==='list');
+  const isMob=window.innerWidth<=767;
+  // nav buttons
+  document.getElementById('mnav-map')?.classList.toggle('on',t==='map');
+  document.getElementById('mnav-list')?.classList.toggle('on',t==='list');
+  document.getElementById('mnav-comm')?.classList.toggle('on',t==='community');
   const mw=document.getElementById('map-wrap');
   const sb=document.getElementById('sidebar');
-  mw.classList.toggle('mob-off',t!=='map');
-  sb.classList.toggle('mob-on',t==='list');
+  const cp=document.getElementById('community-panel');
+  if(isMob){
+    mw.classList.toggle('mob-off',t!=='map');
+    sb.classList.toggle('mob-on',t==='list');
+    sb.classList.toggle('mob-on',t==='list');
+    cp.style.display=t==='community'?'flex':'none';
+    if(t==='community'){cp.style.position='absolute';cp.style.inset='0';cp.style.zIndex='10';}
+  } else {
+    // Desktop: community replaces sidebar
+    sb.style.display=t==='community'?'none':'flex';
+    cp.style.display=t==='community'?'flex':'none';
+    if(t==='community'){cp.style.width='380px';cp.style.flexShrink='0';}
+  }
   if(t==='map'&&map) setTimeout(()=>map.invalidateSize(),100);
+  if(t==='community') renderComm();
 }
 
 // ── TOAST ────────────────────────────────────────────────
@@ -1346,9 +1914,115 @@ function showToast(msg){
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
+// ── FILTER PATCH: override getShops to add price+foodtype filter ──
+function getShops(){
+  return shops.filter(s=>{
+    if(s.status!=='approved') return false;
+    const mc=filterCat==='all'||s.cat===filterCat;
+    const q=searchQ.toLowerCase();
+    const ms=!q||s.name.toLowerCase().includes(q)||s.location.toLowerCase().includes(q);
+    const mp=s.priceMin<=priceMax&&(priceMax>=300||s.priceMax>=priceMin);
+    const mf=activeFoodTypes.length===0||activeFoodTypes.some(t=>
+      s.name.toLowerCase().includes(t.toLowerCase())||
+      s.desc?.toLowerCase().includes(t.toLowerCase())||
+      s.cat===({ข้าว:'vendor',ก๋วยเตี๋ยว:'restaurant',สะดวกซื้อ:'convenience'}[t]||'__')
+    );
+    const mpk=activeParkingFilter==='all'||
+      (activeParkingFilter==='yes'&&(s.parking==='yes'||s.parking==='nearby'))||
+      (activeParkingFilter==='no'&&s.parking==='no');
+    return mc&&ms&&mp&&mf&&mpk;
+  });
+}
+
+// ── COMMUNITY TOGGLE (desktop) ───────────────────────────
+let commVisible=false;
+function toggleCommunity(){
+  commVisible=!commVisible;
+  const btn=document.getElementById('btn-comm-hdr');
+  btn.style.background=commVisible?'rgba(255,255,255,.4)':'rgba(255,255,255,.2)';
+  if(window.innerWidth<=767){ switchTab(commVisible?'community':'map'); return; }
+  const cp=document.getElementById('community-panel');
+  const sb=document.getElementById('sidebar');
+  if(commVisible){
+    cp.style.cssText='display:flex;flex-direction:column;width:380px;flex-shrink:0;border-left:1px solid var(--gray-200);background:var(--gray-50)';
+    sb.style.display='none';
+    renderComm();
+  } else {
+    cp.style.display='none';
+    sb.style.display='flex';
+  }
+}
+
+// ── ADDRESS SEARCH FOR PIN MAP ────────────────────────────
+async function searchAddress(){
+  const q=document.getElementById('addr-search').value.trim();
+  if(!q){showToast('กรุณาพิมพ์ที่อยู่ก่อนครับ');return;}
+  const btn=document.getElementById('addr-btn');
+  btn.innerHTML='<i class="fa fa-spinner fa-spin"></i>';
+  btn.disabled=true;
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' ประเทศไทย')}&format=json&limit=1&accept-language=th`;
+    const res=await fetch(url,{headers:{'Accept-Language':'th'}});
+    const data=await res.json();
+    if(data.length>0){
+      const{lat,lon,display_name}=data[0];
+      pinLat=parseFloat(lat); pinLng=parseFloat(lon);
+      pinMap.setView([pinLat,pinLng],16);
+      if(pinMarker) pinMap.removeLayer(pinMarker);
+      pinMarker=L.marker([pinLat,pinLng],{draggable:true}).addTo(pinMap);
+      pinMarker.on('dragend',e=>{
+        pinLat=e.target.getLatLng().lat;
+        pinLng=e.target.getLatLng().lng;
+        updatePinStatus();
+      });
+      updatePinStatus();
+      showToast('พบตำแหน่งแล้ว! ลากหมุดเพื่อปรับจุดได้ครับ 📍');
+    } else {
+      showToast('ไม่พบที่อยู่นี้ กรุณาลองใหม่ครับ');
+    }
+  } catch(e){
+    showToast('ค้นหาไม่สำเร็จ กรุณาจิ้มบนแผนที่แทนครับ');
+  }
+  btn.innerHTML='<i class="fa fa-search"></i>';
+  btn.disabled=false;
+}
+
+function updatePinStatus(){
+  const st=document.getElementById('pin-status');
+  if(st&&pinLat){
+    st.className='pin-status set';
+    st.innerHTML=`<i class="fa fa-check-circle"></i> ปักหมุดแล้ว: ${pinLat.toFixed(5)}, ${pinLng.toFixed(5)} (ลากหมุดเพื่อปรับ)`;
+  }
+}
+
+// patch initPinMap to support draggable + address search
+const _origInitPinMap=initPinMap;
+function initPinMap(){
+  if(!pinMapInited){
+    pinMap=L.map('pin-map',{zoomControl:true}).setView([13.756,100.502],12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {attribution:'© OpenStreetMap'}).addTo(pinMap);
+    pinMap.on('click',e=>{
+      pinLat=e.latlng.lat; pinLng=e.latlng.lng;
+      if(pinMarker) pinMap.removeLayer(pinMarker);
+      pinMarker=L.marker([pinLat,pinLng],{draggable:true}).addTo(pinMap);
+      pinMarker.on('dragend',ev=>{
+        pinLat=ev.target.getLatLng().lat;
+        pinLng=ev.target.getLatLng().lng;
+        updatePinStatus();
+      });
+      updatePinStatus();
+    });
+    pinMapInited=true;
+  } else {
+    pinMap.invalidateSize();
+    if(userLat) pinMap.setView([userLat,userLng],14);
+  }
+}
+
 // ── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  initMap(); renderCards();
+  initMap(); renderCards(); updateRange();
   if(window.innerWidth<=767) switchTab('map');
 });
 </script>
