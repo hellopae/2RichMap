@@ -9,13 +9,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     :root {
-      --green:#2E7D32; --green-light:#43A047; --green-pale:#E8F5E9;
-      --yellow:#FDD835; --yellow-dark:#F9A825; --yellow-pale:#FFFDE7;
-      --red:#E53935; --red-pale:#FFEBEE; --blue:#1E88E5; --blue-pale:#E3F2FD;
-      --gray-50:#FAFAFA; --gray-100:#F5F5F5; --gray-200:#EEEEEE;
-      --gray-300:#E0E0E0; --gray-500:#9E9E9E; --gray-700:#616161; --gray-900:#212121;
+      --green:#2E7D32; --green-light:#43A047; --green-pale:rgba(46,125,50,.10);
+      --yellow:#F59E0B; --yellow-dark:#D97706; --yellow-pale:rgba(245,158,11,.08);
+      --red:#DC2626; --red-pale:rgba(220,38,38,.10);
+      --blue:#2563EB; --blue-pale:rgba(37,99,235,.10);
+      --gray-50:#F5F6F8; --gray-100:#EAECEF; --gray-200:rgba(0,0,0,.09);
+      --gray-300:rgba(0,0,0,.16); --gray-500:#6B7280;
+      --gray-700:#374151; --gray-900:#111827;
+      --surface:#FFFFFF; --surface2:#F9FAFB; --surface3:#F3F4F6;
       --font:'Sarabun',sans-serif;
-      --shadow:0 2px 8px rgba(0,0,0,0.12); --shadow-lg:0 8px 24px rgba(0,0,0,0.15);
+      --shadow:0 2px 12px rgba(0,0,0,.10); --shadow-lg:0 8px 28px rgba(0,0,0,.16);
       --radius:12px;
     }
     *{margin:0;padding:0;box-sizing:border-box}
@@ -24,30 +27,30 @@
     /* ── HEADER ── */
     #header{
       position:fixed;top:0;left:0;right:0;z-index:1000;
-      background:var(--green);display:flex;align-items:center;
+      background:#FFFFFF;border-bottom:1px solid var(--gray-200);
+      display:flex;align-items:center;
       justify-content:space-between;padding:0 16px;height:56px;box-shadow:var(--shadow)
     }
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
     .logo-badge{
-      width:38px;height:38px;background:var(--yellow);border-radius:9px;
+      width:38px;height:38px;background:var(--green);border-radius:9px;
       display:flex;align-items:center;justify-content:center;
-      font-size:17px;font-weight:900;color:var(--green);letter-spacing:-1px
+      font-size:17px;font-weight:900;color:#fff;letter-spacing:-1px
     }
-    .logo-name{color:#fff;font-weight:800;font-size:20px;letter-spacing:-0.5px}
-    .logo-sub{color:rgba(255,255,255,.7);font-size:11px;line-height:1.2}
+    .logo-name{color:var(--gray-900);font-weight:800;font-size:20px;letter-spacing:-0.5px}
     .hdr-btns{display:flex;gap:8px}
     .hdr-btn{
       display:flex;align-items:center;gap:5px;padding:8px 14px;border:none;
       border-radius:20px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s
     }
-    .hdr-btn-yellow{background:var(--yellow);color:var(--green)}
-    .hdr-btn-ghost{background:rgba(255,255,255,.2);color:#fff}
+    .hdr-btn-yellow{background:var(--green);color:#fff}
+    .hdr-btn-ghost{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
     .hdr-btn:hover{opacity:.9;transform:translateY(-1px)}
 
     /* ── SEARCH + FILTERS ── */
     #topbar{
       position:fixed;top:56px;left:0;right:0;z-index:999;
-      background:#fff;border-bottom:1px solid var(--gray-200)
+      background:var(--surface);border-bottom:1px solid var(--gray-200)
     }
     .search-row{display:flex;gap:8px;padding:10px 14px;align-items:center}
     .search-wrap{position:relative;flex:1}
@@ -55,14 +58,14 @@
     #search-input{
       width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--gray-200);
       border-radius:20px;font-family:var(--font);font-size:14px;outline:none;
-      background:var(--gray-50);transition:border-color .2s
+      background:var(--surface3);color:var(--gray-900);transition:border-color .2s
     }
-    #search-input:focus{border-color:var(--green);background:#fff}
+    #search-input:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--green-pale)}
 
     /* Location button */
     .btn-locate{
       flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gray-200);
-      background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      background:var(--surface3);cursor:pointer;display:flex;align-items:center;justify-content:center;
       color:var(--blue);font-size:17px;transition:all .2s;position:relative
     }
     .btn-locate:hover{border-color:var(--blue);background:var(--blue-pale)}
@@ -85,7 +88,7 @@
     .filter-row::-webkit-scrollbar{display:none}
     .chip{
       flex-shrink:0;padding:5px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
-      background:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
+      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
       color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s
     }
     .chip:hover{border-color:var(--green);color:var(--green)}
@@ -100,7 +103,7 @@
     #map{width:100%;height:100%}
     .map-legend{
       position:absolute;bottom:16px;left:12px;z-index:900;
-      background:#fff;border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);font-size:11px
+      background:var(--surface);border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);font-size:11px
     }
     .legend-title{font-weight:700;color:var(--gray-700);margin-bottom:5px}
     .leg-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;color:var(--gray-700)}
@@ -108,7 +111,7 @@
 
     /* ── SIDEBAR ── */
     #sidebar{
-      width:380px;flex-shrink:0;background:#fff;
+      width:380px;flex-shrink:0;background:var(--surface);
       border-left:1px solid var(--gray-200);
       display:flex;flex-direction:column;overflow:hidden
     }
@@ -122,7 +125,7 @@
     .sort-lbl{font-size:11px;color:var(--gray-500);margin-right:2px;align-self:center}
     .sort-btn{
       font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;
-      border:1px solid var(--gray-200);background:#fff;cursor:pointer;font-family:var(--font);
+      border:1px solid var(--gray-200);background:var(--surface3);cursor:pointer;font-family:var(--font);
       color:var(--gray-700);transition:all .1s
     }
     .sort-btn.on{background:var(--green);color:#fff;border-color:var(--green)}
@@ -132,12 +135,13 @@
 
     /* ── SHOP CARD ── */
     .shop-card{
-      background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);
+      background:var(--surface2);border:1.5px solid var(--gray-200);border-radius:var(--radius);
       margin-bottom:8px;cursor:pointer;transition:all .15s;overflow:hidden
     }
     .shop-card:hover{border-color:var(--green);box-shadow:var(--shadow);transform:translateY(-1px)}
     .shop-card.sel{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
-    .card-img{width:100%;height:110px;object-fit:cover;display:block;background:var(--gray-100)}
+    .card-img-wrap{width:100%;aspect-ratio:4/3;overflow:hidden;background:var(--gray-100);flex-shrink:0}
+    .card-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
     .card-body{padding:11px 12px}
     .card-row1{display:flex;gap:9px;margin-bottom:7px}
     .cat-icon{
@@ -173,11 +177,12 @@
     .btn-flag:hover{background:var(--red);color:#fff}
 
     /* ── POPUP ── */
-    .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden}
+    .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden;background:#fff!important;color:var(--gray-900)!important}
+    .leaflet-popup-tip{background:#fff!important}
     .leaflet-popup-content{margin:0!important;min-width:210px}
     .pop-img{width:100%;height:110px;object-fit:cover;display:block}
-    .pop-body{padding:10px 12px}
-    .pop-name{font-family:var(--font);font-size:13px;font-weight:700;margin-bottom:2px}
+    .pop-body{padding:10px 12px;background:var(--surface)}
+    .pop-name{font-family:var(--font);font-size:13px;font-weight:700;margin-bottom:2px;color:var(--gray-900)}
     .pop-price{font-family:var(--font);font-size:15px;font-weight:800;color:var(--green)}
     .pop-loc{font-family:var(--font);font-size:11px;color:var(--gray-500)}
     .pop-btn{
@@ -200,7 +205,7 @@
     }
     .overlay.open{opacity:1;pointer-events:all}
     .modal{
-      background:#fff;width:100%;max-width:620px;border-radius:20px 20px 0 0;
+      background:var(--surface);width:100%;max-width:620px;border-radius:20px 20px 0 0;
       padding:18px 20px 24px;max-height:92vh;overflow-y:auto;
       transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
       position:relative
@@ -209,17 +214,28 @@
     .modal-handle{width:36px;height:4px;background:var(--gray-200);border-radius:2px;margin:0 auto 14px}
     .modal-close{
       position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
-      background:var(--gray-100);border:none;cursor:pointer;font-size:14px;
+      background:var(--surface3);border:none;cursor:pointer;font-size:14px;
       color:var(--gray-700);display:flex;align-items:center;justify-content:center
     }
-    .modal-close:hover{background:var(--gray-200)}
+    .modal-close:hover{background:var(--gray-300)}
     @media(min-width:768px){
       .overlay{align-items:center}
       .modal{border-radius:20px;max-height:88vh}
     }
 
     /* ── DETAIL ── */
-    .det-cover{width:100%;height:190px;object-fit:cover;border-radius:12px;margin-bottom:14px;display:block}
+    .det-cover-wrap{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;cursor:pointer}
+    .det-cover-wrap:hover .det-cover-overlay{opacity:1}
+    .det-cover{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:center;display:block}
+    .det-cover-overlay{position:absolute;inset:0;background:rgba(0,0,0,.18);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center}
+    .det-cover-overlay i{color:#fff;font-size:28px}
+    .gal-count-pill{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:3px 9px;border-radius:12px;font-family:var(--font);pointer-events:none}
+    /* Image strip */
+    .img-strip{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+    .img-strip::-webkit-scrollbar{display:none}
+    .img-strip-item{flex-shrink:0;width:64px;height:48px;border-radius:7px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:all .15s;opacity:.7}
+    .img-strip-item img{width:100%;height:100%;object-fit:cover;display:block}
+    .img-strip-item:hover,.img-strip-item.on{border-color:var(--green);opacity:1}
     .det-hdr{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px}
     .det-icon{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
     .det-name{font-size:19px;font-weight:800;margin-bottom:2px}
@@ -233,7 +249,7 @@
     .sec{margin-bottom:14px}
     .sec-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);margin-bottom:7px}
     .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-    .info-box{background:var(--gray-50);border-radius:8px;padding:9px}
+    .info-box{background:var(--surface3);border-radius:8px;padding:9px}
     .info-lbl{font-size:11px;color:var(--gray-500);margin-bottom:2px}
     .info-val{font-size:13px;font-weight:600}
 
@@ -246,7 +262,7 @@
     .menu-price{font-size:11px;color:var(--green);font-weight:700;text-align:center}
 
     /* Reviews */
-    .rev-item{background:var(--gray-50);border-radius:9px;padding:10px;margin-bottom:7px}
+    .rev-item{background:var(--surface3);border-radius:9px;padding:10px;margin-bottom:7px}
     .rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
     .rev-name{font-size:12px;font-weight:600}
     .rev-stars{display:flex;gap:1px}
@@ -282,7 +298,8 @@
     .req{color:var(--red);margin-left:2px}
     .form-inp,.form-sel,.form-ta{
       width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;
-      font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;color:var(--gray-900)
+      font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;
+      color:var(--gray-900);background:var(--surface3)
     }
     .form-inp:focus,.form-sel:focus,.form-ta:focus{border-color:var(--green)}
     .form-ta{resize:vertical;min-height:70px}
@@ -304,7 +321,7 @@
     /* Image upload */
     .upload-zone{
       border:2px dashed var(--gray-300);border-radius:10px;padding:20px;text-align:center;
-      cursor:pointer;transition:all .15s;background:var(--gray-50)
+      cursor:pointer;transition:all .15s;background:var(--surface3)
     }
     .upload-zone:hover{border-color:var(--green);background:var(--green-pale)}
     .upload-zone.drag{border-color:var(--green);background:var(--green-pale)}
@@ -348,7 +365,8 @@
     .adm-sec.on{display:block}
     .adm-row{
       display:flex;gap:10px;align-items:flex-start;padding:10px;
-      border:1px solid var(--gray-200);border-radius:9px;margin-bottom:7px
+      border:1px solid var(--gray-200);border-radius:9px;margin-bottom:7px;
+      background:var(--surface3)
     }
     .adm-thumb{width:56px;height:56px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
     .adm-info{flex:1;min-width:0}
@@ -365,7 +383,7 @@
     .btn-no:hover{background:var(--red);color:#fff}
     .btn-ed{background:var(--yellow-pale);color:#E65100;border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
     .adm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-    .stat-box{background:var(--gray-50);border-radius:9px;padding:11px;text-align:center}
+    .stat-box{background:var(--surface3);border-radius:9px;padding:11px;text-align:center}
     .stat-n{font-size:22px;font-weight:800;color:var(--green)}
     .stat-l{font-size:11px;color:var(--gray-500)}
     .empty-msg{text-align:center;padding:20px;color:var(--gray-500);font-size:13px}
@@ -375,7 +393,7 @@
 
     /* ── MOBILE ── */
     #mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:1000;
-      background:#fff;border-top:1px solid var(--gray-200);height:58px}
+      background:var(--surface);border-top:1px solid var(--gray-200);height:58px}
     .mnav{display:flex;height:100%}
     .mnav-btn{
       flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -394,7 +412,7 @@
     #toast{
       position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);
       background:var(--gray-900);color:#fff;padding:9px 18px;border-radius:20px;
-      font-size:13px;font-weight:500;z-index:4000;opacity:0;transition:all .3s;
+      font-size:13px;font-weight:600;z-index:4000;opacity:0;transition:all .3s;
       pointer-events:none;white-space:nowrap;font-family:var(--font)
     }
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -420,7 +438,7 @@
     .filter-modal-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px}
 
     /* Dual range slider */
-    .range-wrap{background:var(--gray-50);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+    .range-wrap{background:var(--surface3);border-radius:12px;padding:16px 18px;margin-bottom:20px}
     .range-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .range-label-text{font-size:14px;font-weight:600;color:var(--gray-700)}
     .range-val-badge{font-size:14px;font-weight:700;color:var(--green)}
@@ -456,7 +474,7 @@
     .food-chips-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
     .food-chip{
       padding:8px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
-      background:#fff;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
+      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
       color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s;
       user-select:none
     }
@@ -488,7 +506,7 @@
     }
     .btn-filter-open{
       flex-shrink:0;display:flex;align-items:center;gap:5px;padding:5px 12px;
-      border-radius:20px;border:1.5px solid var(--gray-200);background:#fff;
+      border-radius:20px;border:1.5px solid var(--gray-200);background:var(--surface3);
       cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;
       color:var(--gray-700);transition:all .15s;white-space:nowrap
     }
@@ -502,11 +520,11 @@
     }
     #community-panel.on{display:flex}
     .comm-head{
-      background:#fff;border-bottom:1px solid var(--gray-200);
+      background:var(--surface);border-bottom:1px solid var(--gray-200);
       padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0
     }
     .comm-head-title{font-size:15px;font-weight:800;flex:1}
-    .comm-tabs{display:flex;gap:0;border-bottom:1px solid var(--gray-200);background:#fff;flex-shrink:0}
+    .comm-tabs{display:flex;gap:0;border-bottom:1px solid var(--gray-200);background:var(--surface);flex-shrink:0}
     .comm-tab{
       flex:1;padding:10px;border:none;background:transparent;font-family:var(--font);
       font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
@@ -519,7 +537,7 @@
 
     /* Post card */
     .post-card{
-      background:#fff;border:1.5px solid var(--gray-200);border-radius:12px;
+      background:var(--surface2);border:1.5px solid var(--gray-200);border-radius:12px;
       padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s
     }
     .post-card:hover{border-color:var(--green);box-shadow:var(--shadow)}
@@ -542,7 +560,7 @@
     .tag-review{background:var(--green-pale);color:var(--green)}
     .vote-btn{
       display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
-      border:1.5px solid var(--gray-200);background:#fff;cursor:pointer;
+      border:1.5px solid var(--gray-200);background:var(--surface3);cursor:pointer;
       font-family:var(--font);font-size:12px;font-weight:600;color:var(--gray-700);
       transition:all .15s
     }
@@ -555,13 +573,14 @@
     .post-detail-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
     .post-detail-body{font-size:14px;color:var(--gray-700);line-height:1.7;margin-bottom:16px}
     .post-comments{border-top:1px solid var(--gray-200);padding-top:14px}
-    .comment-item{background:var(--gray-50);border-radius:8px;padding:10px;margin-bottom:8px}
+    .comment-item{background:var(--surface3);border-radius:8px;padding:10px;margin-bottom:8px}
     .comment-author{font-size:12px;font-weight:600;margin-bottom:3px}
     .comment-text{font-size:13px;color:var(--gray-700);line-height:1.5}
     .comment-form{display:flex;gap:8px;margin-top:12px}
     .comment-input{
       flex:1;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:20px;
-      font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s
+      font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;
+      background:var(--surface3);color:var(--gray-900)
     }
     .comment-input:focus{border-color:var(--green)}
     .btn-comment-send{
@@ -581,10 +600,36 @@
     .tag-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
     .tag-opt{
       padding:5px 12px;border-radius:10px;border:1.5px solid var(--gray-200);
-      background:#fff;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;
+      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;
       color:var(--gray-700);transition:all .15s
     }
     .tag-opt.on{border-color:var(--green);background:var(--green-pale);color:var(--green)}
+
+    /* ── GALLERY LIGHTBOX ── */
+    #gallery-modal{align-items:center;justify-content:center;background:rgba(0,0,0,.93);z-index:3000}
+    #gallery-modal .modal{background:transparent;border-radius:0;padding:0;max-height:100vh;overflow:visible;width:100%;max-width:100%;transform:none;box-shadow:none}
+    #gallery-modal.open .modal{transform:none}
+    .gal-wrap{display:flex;flex-direction:column;align-items:center;width:100%;max-width:900px;margin:0 auto;padding:16px 20px}
+    .gal-main{position:relative;width:100%;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+    .gal-img{max-width:100%;max-height:68vh;border-radius:10px;object-fit:contain;display:block}
+    .gal-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;backdrop-filter:blur(4px)}
+    .gal-nav:hover{background:rgba(255,255,255,.3)}
+    .gal-prev{left:6px}.gal-next{right:6px}
+    .gal-close{position:fixed;top:16px;right:16px;width:40px;height:40px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:3001;backdrop-filter:blur(4px);transition:background .15s}
+    .gal-close:hover{background:rgba(255,255,255,.3)}
+    .gal-caption{color:#fff;font-size:13px;font-weight:600;text-align:center;margin-bottom:4px;font-family:var(--font)}
+    .gal-counter{color:rgba(255,255,255,.55);font-size:11px;text-align:center;margin-bottom:10px;font-family:var(--font)}
+    .gal-thumbs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;max-width:100%;padding:0 4px}
+    .gal-thumb{width:52px;height:40px;border-radius:5px;overflow:hidden;border:2px solid transparent;cursor:pointer;opacity:.55;transition:all .15s;flex-shrink:0}
+    .gal-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .gal-thumb.on{border-color:#fff;opacity:1}
+    .gal-thumb:hover{opacity:.85}
+
+    /* ── ADMIN EDIT MODAL ── */
+    #admin-edit-modal .modal{max-width:640px}
+    .ae-menu-row{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px}
+    .ae-menu-thumb{width:52px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
+    .ae-rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px}
   </style>
 </head>
 <body>
@@ -593,10 +638,7 @@
 <header id="header">
   <a class="logo" href="#">
     <div class="logo-badge">2R</div>
-    <div>
-      <div class="logo-name">2RichMap</div>
-      <div class="logo-sub">แผนที่รวยไม่ไหวแล้ว</div>
-    </div>
+    <div class="logo-name">2RichMap</div>
   </a>
   <div class="hdr-btns">
     <button class="hdr-btn hdr-btn-yellow" onclick="openAddModal()">
@@ -604,9 +646,6 @@
     </button>
     <button class="hdr-btn hdr-btn-ghost" id="btn-comm-hdr" onclick="toggleCommunity()">
       <i class="fa fa-comments"></i><span> ชุมชน</span>
-    </button>
-    <button class="hdr-btn hdr-btn-ghost" onclick="openAdminGate()">
-      <i class="fa fa-shield-halved"></i><span> Admin</span>
     </button>
   </div>
 </header>
@@ -960,13 +999,126 @@
   </div>
 </div>
 
+<!-- GALLERY LIGHTBOX -->
+<div class="overlay" id="gallery-modal">
+  <button class="gal-close" onclick="closeModal('gallery-modal')"><i class="fa fa-times"></i></button>
+  <div class="modal">
+    <div class="gal-wrap">
+      <div class="gal-main">
+        <button class="gal-nav gal-prev" onclick="galNav(-1)"><i class="fa fa-chevron-left"></i></button>
+        <img class="gal-img" id="gal-img" src="" alt="">
+        <button class="gal-nav gal-next" onclick="galNav(1)"><i class="fa fa-chevron-right"></i></button>
+      </div>
+      <div class="gal-caption" id="gal-caption"></div>
+      <div class="gal-counter" id="gal-counter"></div>
+      <div class="gal-thumbs" id="gal-thumbs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN EDIT MODAL -->
+<div class="overlay" id="admin-edit-modal" onclick="closeOnBg(event,'admin-edit-modal')">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('admin-edit-modal')"><i class="fa fa-times"></i></button>
+    <div style="font-size:18px;font-weight:800;margin-bottom:2px">✏️ แก้ไขข้อมูลร้าน</div>
+    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px" id="adm-edit-shop-name"></div>
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:14px" id="adm-edit-tabs">
+      <button class="adm-tab on" onclick="switchAdmEditTab('info',this)">ข้อมูลร้าน</button>
+      <button class="adm-tab" onclick="switchAdmEditTab('menus',this)">เมนู</button>
+      <button class="adm-tab" onclick="switchAdmEditTab('reviews',this)">รีวิว</button>
+    </div>
+    <!-- Tab: Info -->
+    <div id="adm-edit-info" class="adm-sec on">
+      <div class="form-g">
+        <label class="form-lbl">ชื่อร้าน<span class="req">*</span></label>
+        <input type="text" class="form-inp" id="ae-name">
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">หมวดหมู่</label>
+          <select class="form-sel" id="ae-cat">
+            <option value="street">🍢 Street Food</option>
+            <option value="restaurant">🍜 ร้านอาหาร</option>
+            <option value="vendor">🛒 แผงลอย</option>
+            <option value="market">🏪 ตลาดนัด</option>
+            <option value="convenience">🏬 สะดวกซื้อ</option>
+          </select>
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ย่าน/ที่อยู่</label>
+          <input type="text" class="form-inp" id="ae-loc">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">ราคาต่ำสุด (฿)</label>
+          <input type="number" class="form-inp" id="ae-min">
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ราคาสูงสุด (฿)</label>
+          <input type="number" class="form-inp" id="ae-max">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">ความคุ้มค่า (1-5)</label>
+          <input type="number" class="form-inp" id="ae-value" min="0" max="5">
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ที่จอดรถ</label>
+          <select class="form-sel" id="ae-park">
+            <option value="no">❌ ไม่มี</option>
+            <option value="yes">✅ มี</option>
+            <option value="nearby">🅿️ ใกล้เคียง</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">เวลาเปิด-ปิด</label>
+        <input type="text" class="form-inp" id="ae-hours" placeholder="เช่น 08:00-20:00">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">รูปหน้าปก (URL)</label>
+        <input type="text" class="form-inp" id="ae-cover" placeholder="https://..." oninput="aePreviewCover()">
+        <div id="ae-cover-preview" style="margin-top:8px;border-radius:8px;overflow:hidden;display:none">
+          <img id="ae-cover-img" style="width:100%;height:130px;object-fit:cover;display:block" alt="">
+        </div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">คำอธิบายร้าน</label>
+        <textarea class="form-ta" id="ae-desc" style="min-height:80px"></textarea>
+      </div>
+    </div>
+    <!-- Tab: Menus -->
+    <div id="adm-edit-menus" class="adm-sec">
+      <div id="ae-menus-list"></div>
+      <button class="btn-submit" style="padding:10px;font-size:13px;margin-top:8px;background:var(--blue)" onclick="aeAddMenu()">
+        <i class="fa fa-plus"></i> เพิ่มเมนูใหม่
+      </button>
+    </div>
+    <!-- Tab: Reviews -->
+    <div id="adm-edit-reviews" class="adm-sec">
+      <div id="ae-reviews-list"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--gray-100)">
+      <button class="act-btn act-green" style="flex:2" onclick="adminEditSave()"><i class="fa fa-check"></i> บันทึก</button>
+      <button class="act-btn act-gray" onclick="closeModal('admin-edit-modal')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ── DATA ────────────────────────────────────────────────
-const shops = [
-  {id:1,name:"ผัดไทยทิพย์สมัย",cat:"street",location:"313 ถ.มหาไชย พระนคร",
+// Shops and posts are persisted in localStorage.
+// Use admin.html to add/edit shops.
+let shops = [];
+
+// ── OLD DATA (kept as unused ref) ──
+const _legacyData = [{id:999,name:"ผัดไทยทิพย์สมัย",cat:"street",location:"313 ถ.มหาไชย พระนคร",
    lat:13.7558,lng:100.5013,priceMin:60,priceMax:120,rating:4.9,reviews:1842,
    value:5,status:"approved",reportCount:0,parking:"no",hours:"17:00-02:00",
    cover:"pic/r1_cover.jpg",
@@ -1919,7 +2071,7 @@ function cardHtml(s){
   const sel=selId===s.id?' sel':'';
   const valPct=(s.value||0)/5*100;
   return `<div class="shop-card${sel}" id="card-${s.id}" onclick="openDet(${s.id})">
-    <img class="card-img" src="${s.cover}" loading="lazy" onerror="this.style.display='none'" alt="">
+    <div class="card-img-wrap"><img class="card-img" src="${s.cover}" loading="lazy" onerror="this.parentElement.style.background='var(--gray-200)'" alt=""></div>
     <div class="card-body">
       <div class="card-row1">
         <div class="cat-icon" style="background:${c.color}20">${c.icon}</div>
@@ -2010,10 +2162,20 @@ function openDet(id){
     <div class="rev-date">${r.date} · <a href="#" onclick="flagRev(${s.id},${i});return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
   </div>`).join('');
   const wonBtn=s.wongnai?`<div class="sec"><a class="btn-wongnai" href="${s.wongnai}" target="_blank"><i class="fa fa-magnifying-glass"></i> ดูเพิ่มเติมบน Wongnai</a></div>`:'';
+  // Build all images for gallery: cover + menu images
+  const allImgs=[{src:s.cover,caption:s.name},...s.menus.filter(m=>m.img).map(m=>({src:m.img,caption:m.name}))];
+  const stripHtml=allImgs.length>1?`<div class="img-strip">${allImgs.map((im,i)=>
+    `<div class="img-strip-item${i===0?' on':''}" onclick="openGallery(${s.id},${i})"><img src="${im.src}" onerror="this.style.display='none'" alt=""></div>`
+  ).join('')}</div>`:'';
   document.getElementById('det-body').innerHTML=`
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('det-modal')"><i class="fa fa-times"></i></button>
-    <img class="det-cover" src="${s.cover}" onerror="this.style.display='none'" alt="">
+    <div class="det-cover-wrap" onclick="openGallery(${s.id},0)">
+      <img class="det-cover" src="${s.cover}" onerror="this.style.display='none'" alt="">
+      <div class="det-cover-overlay"><i class="fa fa-expand"></i></div>
+      ${allImgs.length>1?`<div class="gal-count-pill"><i class="fa fa-images"></i> ${allImgs.length} รูป</div>`:''}
+    </div>
+    ${stripHtml}
     <div class="det-hdr">
       <div class="det-icon" style="background:${c.color}20">${c.icon}</div>
       <div>
@@ -2193,6 +2355,7 @@ function submitShop(){
   });
   document.getElementById('add-form').style.display='none';
   document.getElementById('add-success').style.display='block';
+  saveShops();
 }
 
 // ── MODAL HELPERS ────────────────────────────────────────
@@ -2304,14 +2467,14 @@ function adminApprove(id){
   const s={...pendingShops[i],status:'approved'};
   shops.push(s); addMarker(s);
   pendingShops.splice(i,1);
-  renderCards(); renderAdmin();
+  saveShops(); renderCards(); renderAdmin();
   showToast(`อนุมัติ "${s.name}" แล้ว ✅`);
 }
 function adminReject(id){
   const i=pendingShops.findIndex(s=>s.id===id); if(i<0) return;
   const n=pendingShops[i].name;
   pendingShops.splice(i,1);
-  renderAdmin();
+  saveShops(); renderAdmin();
   showToast(`ปฏิเสธ "${n}" แล้ว`);
 }
 function adminDel(id){
@@ -2320,21 +2483,34 @@ function adminDel(id){
   const n=shops[i].name;
   if(markers[id]){map.removeLayer(markers[id]);delete markers[id];}
   shops.splice(i,1);
-  renderCards(); renderAdmin();
+  saveShops(); renderCards(); renderAdmin();
   showToast(`ลบ "${n}" แล้ว`);
 }
 function adminEdit(id){
   const s=shops.find(x=>x.id===id); if(!s) return;
-  const n=prompt('ชื่อร้าน:',s.name); if(!n) return;
-  const mn=prompt('ราคาต่ำสุด (฿):',s.priceMin);
-  const mx=prompt('ราคาสูงสุด (฿):',s.priceMax);
-  const v=prompt('ความคุ้มค่า (1-5):',s.value||0);
-  s.name=n;
-  s.priceMin=parseInt(mn)||s.priceMin;
-  s.priceMax=parseInt(mx)||s.priceMax;
-  s.value=Math.min(5,Math.max(0,parseInt(v)||s.value||0));
-  renderCards(); renderAdmin();
-  showToast(`บันทึก "${s.name}" แล้ว ✅`);
+  adminEditingId=id;
+  document.getElementById('adm-edit-shop-name').textContent=`#${s.id} · ${CAT[s.cat]?.icon||''} ${s.name}`;
+  document.getElementById('ae-name').value=s.name;
+  document.getElementById('ae-cat').value=s.cat;
+  document.getElementById('ae-loc').value=s.location;
+  document.getElementById('ae-min').value=s.priceMin;
+  document.getElementById('ae-max').value=s.priceMax;
+  document.getElementById('ae-value').value=s.value||0;
+  document.getElementById('ae-park').value=s.parking||'no';
+  document.getElementById('ae-hours').value=s.hours||'';
+  document.getElementById('ae-cover').value=s.cover||'';
+  document.getElementById('ae-desc').value=s.desc||'';
+  const prev=document.getElementById('ae-cover-preview');
+  const img=document.getElementById('ae-cover-img');
+  if(s.cover){img.src=s.cover;prev.style.display='block';}
+  else prev.style.display='none';
+  renderAeMenus(s);
+  renderAeReviews(s);
+  // Reset to info tab
+  const firstTab=document.querySelector('#adm-edit-tabs .adm-tab');
+  switchAdmEditTab('info',firstTab);
+  closeModal('admin-modal');
+  openModal('admin-edit-modal');
 }
 function adminClearRep(id){const s=shops.find(x=>x.id===id);if(s)s.reportCount=0;renderAdmin();showToast('ล้างรายงานแล้ว ✅');}
 function adminKeepRev(ri){reportedReviews.splice(ri,1);renderAdmin();showToast('เก็บรีวิวไว้แล้ว ✅');}
@@ -2431,7 +2607,8 @@ const _origGetShops = getShops;
 const TAGS={tip:{label:'💡 ทิปประหยัด',cls:'tag-tip'},deal:{label:'🏷️ ดีล',cls:'tag-deal'},
   question:{label:'❓ ถามชุมชน',cls:'tag-question'},review:{label:'⭐ รีวิวร้าน',cls:'tag-review'}};
 
-let posts=[
+let posts=[];
+const _legacyPosts=[
   {id:1,title:'ข้าวแกงแถวหัวลำโพง 35 บาท ข้าวเติมฟรี!',
    body:'ร้านข้างสถานีรถไฟหัวลำโพง เปิดตี 5 ถึงบ่าย 2 ข้าวเติมได้ไม่อั้น แกงหลายอย่าง แนะนำมาก เดินทางสะดวกมาก นั่งรถไฟฟ้าลงหัวลำโพงแล้วเดินได้เลย',
    tag:'tip',author:'คนกรุงเทพ',time:'2 ชม. ที่แล้ว',votes:84,voted:false,comments:[
@@ -2558,7 +2735,7 @@ function sendComment(id){
   inp.value='';
   const box=document.getElementById(`comments-${id}`);
   if(box) box.innerHTML+=`<div class="comment-item"><div class="comment-author">คุณ</div><div class="comment-text">${txt}</div></div>`;
-  renderComm();
+  savePosts(); renderComm();
   showToast('ส่งความคิดเห็นแล้ว 💬');
 }
 
@@ -2581,7 +2758,7 @@ function submitPost(){
   document.getElementById('np-title').value='';
   document.getElementById('np-body').value='';
   document.getElementById('np-author').value='';
-  renderComm();
+  savePosts(); renderComm();
   showToast('โพสต์สำเร็จ! 🎉');
 }
 
@@ -2725,8 +2902,179 @@ function initPinMap(){
   }
 }
 
+// ── GALLERY ──────────────────────────────────────────────
+let galImages=[],galIdx=0;
+
+function openGallery(shopId,idx){
+  const s=shops.find(x=>x.id===shopId); if(!s) return;
+  galImages=[{src:s.cover,caption:s.name},...s.menus.filter(m=>m.img).map(m=>({src:m.img,caption:m.name}))];
+  galIdx=Math.max(0,Math.min(idx||0,galImages.length-1));
+  renderGallery();
+  openModal('gallery-modal');
+}
+
+function renderGallery(){
+  if(!galImages.length) return;
+  const cur=galImages[galIdx];
+  document.getElementById('gal-img').src=cur.src;
+  document.getElementById('gal-caption').textContent=cur.caption;
+  document.getElementById('gal-counter').textContent=`${galIdx+1} / ${galImages.length}`;
+  document.getElementById('gal-thumbs').innerHTML=galImages.map((im,i)=>
+    `<div class="gal-thumb${i===galIdx?' on':''}" onclick="galJump(${i})"><img src="${im.src}" alt="" onerror="this.style.display='none'"></div>`
+  ).join('');
+}
+
+function galNav(dir){
+  galIdx=(galIdx+dir+galImages.length)%galImages.length;
+  renderGallery();
+}
+
+function galJump(i){galIdx=i;renderGallery();}
+
+// Keyboard nav for gallery
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('gallery-modal').classList.contains('open')) return;
+  if(e.key==='ArrowLeft') galNav(-1);
+  else if(e.key==='ArrowRight') galNav(1);
+  else if(e.key==='Escape') closeModal('gallery-modal');
+});
+
+// ── ADMIN EDIT MODAL ────────────────────────────────────
+let adminEditingId=null;
+
+function switchAdmEditTab(t,btn){
+  document.querySelectorAll('#adm-edit-tabs .adm-tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['info','menus','reviews'].forEach(x=>document.getElementById(`adm-edit-${x}`).classList.toggle('on',x===t));
+}
+
+function aePreviewCover(){
+  const v=document.getElementById('ae-cover').value.trim();
+  const prev=document.getElementById('ae-cover-preview');
+  const img=document.getElementById('ae-cover-img');
+  if(v){img.src=v;prev.style.display='block';}
+  else prev.style.display='none';
+}
+
+function renderAeMenus(s){
+  const el=document.getElementById('ae-menus-list');
+  if(!s.menus||!s.menus.length){
+    el.innerHTML='<div class="empty-msg">ยังไม่มีเมนู</div>'; return;
+  }
+  el.innerHTML=s.menus.map((m,i)=>`
+    <div class="ae-menu-row">
+      <img class="ae-menu-thumb" src="${m.img}" onerror="this.style.background='var(--gray-200)'" alt="">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px">
+        <input type="text" class="form-inp" value="${m.name}" id="aemn-${i}" placeholder="ชื่อเมนู" style="font-size:12px;padding:6px 10px">
+        <div style="display:flex;gap:6px">
+          <input type="number" class="form-inp" value="${m.price}" id="aemp-${i}" placeholder="฿" style="font-size:12px;padding:6px 10px;width:75px;flex-shrink:0">
+          <input type="text" class="form-inp" value="${m.img}" id="aemi-${i}" placeholder="URL รูป" style="font-size:12px;padding:6px 10px;flex:1">
+        </div>
+      </div>
+      <button class="btn-no" onclick="aeRemoveMenu(${i})" style="flex-shrink:0;align-self:center">🗑️</button>
+    </div>`).join('');
+}
+
+function renderAeReviews(s){
+  const el=document.getElementById('ae-reviews-list');
+  if(!s.reviewList||!s.reviewList.length){
+    el.innerHTML='<div class="empty-msg">ยังไม่มีรีวิว</div>'; return;
+  }
+  el.innerHTML=s.reviewList.map((r,i)=>`
+    <div class="ae-rev-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;margin-bottom:2px">${r.name} ${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="font-size:12px;color:var(--gray-700);line-height:1.4">"${r.text}"</div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:2px">${r.date}</div>
+      </div>
+      <button class="btn-no" onclick="aeDeleteReview(${i})" style="flex-shrink:0;align-self:flex-start">🗑️</button>
+    </div>`).join('');
+}
+
+function aeAddMenu(){
+  const s=shops.find(x=>x.id===adminEditingId); if(!s) return;
+  // Save current menu inputs first
+  aeCollectMenus(s);
+  s.menus.push({name:'เมนูใหม่',price:0,img:''});
+  renderAeMenus(s);
+}
+
+function aeRemoveMenu(i){
+  const s=shops.find(x=>x.id===adminEditingId); if(!s) return;
+  aeCollectMenus(s);
+  s.menus.splice(i,1);
+  renderAeMenus(s);
+}
+
+function aeDeleteReview(i){
+  const s=shops.find(x=>x.id===adminEditingId); if(!s) return;
+  s.reviewList.splice(i,1);
+  s.reviews=Math.max(0,s.reviews-1);
+  renderAeReviews(s);
+  showToast('ลบรีวิวแล้ว 🗑️');
+}
+
+function aeCollectMenus(s){
+  s.menus.forEach((m,i)=>{
+    const n=document.getElementById(`aemn-${i}`);
+    const p=document.getElementById(`aemp-${i}`);
+    const im=document.getElementById(`aemi-${i}`);
+    if(n) m.name=n.value.trim()||m.name;
+    if(p) m.price=parseInt(p.value)||m.price;
+    if(im) m.img=im.value.trim();
+  });
+}
+
+function adminEditSave(){
+  const s=shops.find(x=>x.id===adminEditingId); if(!s) return;
+  aeCollectMenus(s);
+  s.name=document.getElementById('ae-name').value.trim()||s.name;
+  s.cat=document.getElementById('ae-cat').value;
+  s.location=document.getElementById('ae-loc').value.trim()||s.location;
+  s.priceMin=parseInt(document.getElementById('ae-min').value)||s.priceMin;
+  s.priceMax=parseInt(document.getElementById('ae-max').value)||s.priceMax;
+  s.value=Math.min(5,Math.max(0,parseInt(document.getElementById('ae-value').value)||s.value||0));
+  s.parking=document.getElementById('ae-park').value;
+  s.hours=document.getElementById('ae-hours').value.trim();
+  const newCover=document.getElementById('ae-cover').value.trim();
+  if(newCover) s.cover=newCover;
+  s.desc=document.getElementById('ae-desc').value.trim();
+  if(markers[s.id]) markers[s.id].setPopupContent(popupHtml(s));
+  saveShops(); renderCards();
+  closeModal('admin-edit-modal');
+  showToast(`บันทึก "${s.name}" เรียบร้อย ✅`);
+}
+
+// ── LOCALSTORAGE ─────────────────────────────────────────
+const LS_SHOPS='2rm_shops', LS_PENDING='2rm_pending', LS_POSTS='2rm_posts';
+
+function loadData(){
+  try{
+    const s=localStorage.getItem(LS_SHOPS);
+    const p=localStorage.getItem(LS_PENDING);
+    const po=localStorage.getItem(LS_POSTS);
+    if(s) shops.push(...JSON.parse(s));
+    if(p) pendingShops.push(...JSON.parse(p));
+    if(po) posts.push(...JSON.parse(po));
+  }catch(e){console.warn('loadData error',e);}
+}
+
+function saveShops(){
+  try{
+    localStorage.setItem(LS_SHOPS, JSON.stringify(shops));
+    localStorage.setItem(LS_PENDING, JSON.stringify(pendingShops));
+  }catch(e){console.warn('saveShops error',e);}
+}
+
+function savePosts(){
+  try{
+    localStorage.setItem(LS_POSTS, JSON.stringify(posts));
+  }catch(e){console.warn('savePosts error',e);}
+}
+
 // ── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
+  loadData();
   initMap(); renderCards(); updateRange();
   if(window.innerWidth<=767) switchTab('map');
 });

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2RichMap — Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --green:#3FB950; --green-light:#56D364; --green-pale:rgba(63,185,80,.14);
+      --yellow:#E3B341; --yellow-dark:#D29922; --yellow-pale:rgba(227,179,65,.08);
+      --red:#F85149; --red-pale:rgba(248,81,73,.12);
+      --blue:#58A6FF; --blue-pale:rgba(88,166,255,.12);
+      --gray-50:#0D1117; --gray-100:#161B22; --gray-200:rgba(255,255,255,.08);
+      --gray-300:rgba(255,255,255,.15); --gray-500:#8B949E;
+      --gray-700:#C9D1D9; --gray-900:#E6EDF3;
+      --surface:#161B22; --surface2:#1E2535; --surface3:#21262D;
+      --font:'Sarabun',sans-serif; --radius:10px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min-height:100vh}
+
+    /* ── LOGIN ── */
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+    .login-box{background:var(--surface);border:1px solid var(--gray-200);border-radius:18px;padding:40px 36px;width:100%;max-width:380px;text-align:center}
+    .login-logo{font-size:46px;margin-bottom:12px}
+    .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
+    .login-sub{font-size:13px;color:var(--gray-500);margin-bottom:28px}
+    .form-inp{width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);border-radius:9px;font-family:var(--font);font-size:14px;outline:none;background:var(--surface3);color:var(--gray-900);transition:border-color .2s;margin-bottom:10px}
+    .form-inp:focus{border-color:var(--green)}
+    .form-sel{width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:var(--font);font-size:14px;outline:none;background:var(--surface3);color:var(--gray-900)}
+    .form-ta{width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:var(--font);font-size:14px;outline:none;background:var(--surface3);color:var(--gray-900);resize:vertical;min-height:70px}
+    .form-inp:focus,.form-sel:focus,.form-ta:focus{border-color:var(--green)}
+    .btn-login{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:9px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+    .btn-login:hover{background:var(--green-light)}
+    .login-err{color:var(--red);font-size:13px;margin-bottom:10px;display:none}
+
+    /* ── APP ── */
+    #app-screen{display:none}
+    .adm-header{background:#0D1117;border-bottom:1px solid rgba(63,185,80,.25);padding:0 24px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:200}
+    .adm-logo{font-size:16px;font-weight:800;color:var(--green)}
+    .adm-logo-sub{font-size:12px;color:var(--gray-500);margin-left:6px}
+    .adm-header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .hbtn{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--gray-200);background:var(--surface3);color:var(--gray-700);text-decoration:none;transition:all .15s}
+    .hbtn:hover{border-color:var(--green);color:var(--green)}
+    .hbtn-red{background:var(--red-pale);color:var(--red);border-color:transparent}
+    .hbtn-red:hover{background:var(--red);color:#fff}
+
+    /* ── LAYOUT ── */
+    .adm-body{display:flex;min-height:calc(100vh - 56px)}
+    .adm-nav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--gray-200);padding:12px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;font-size:14px;font-weight:500;color:var(--gray-500);cursor:pointer;transition:all .15s;border-left:3px solid transparent;user-select:none}
+    .nav-item:hover{background:var(--surface3);color:var(--gray-900)}
+    .nav-item.on{color:var(--green);border-left-color:var(--green);background:var(--green-pale);font-weight:700}
+    .nav-badge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:auto}
+    .nav-sep{height:1px;background:var(--gray-200);margin:8px 16px}
+    .adm-content{flex:1;padding:24px;min-width:0}
+
+    /* ── PANELS ── */
+    .panel{display:none}
+    .panel.on{display:block}
+
+    /* ── STATS ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px}
+    .stat-card{background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px;text-align:center}
+    .stat-n{font-size:30px;font-weight:800;color:var(--green)}
+    .stat-n.warn{color:var(--yellow-dark)}
+    .stat-n.danger{color:var(--red)}
+    .stat-l{font-size:12px;color:var(--gray-500);margin-top:3px}
+
+    /* ── SECTION ── */
+    .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .sec-title{font-size:16px;font-weight:800}
+    .sec-count{font-size:12px;color:var(--gray-500);font-weight:400}
+
+    /* ── ROWS ── */
+    .shop-row{background:var(--surface);border:1px solid var(--gray-200);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:center;transition:border-color .15s}
+    .shop-row:hover{border-color:var(--gray-300)}
+    .shop-thumb{width:64px;height:48px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+    .shop-info{flex:1;min-width:0}
+    .shop-name{font-size:14px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .shop-meta{font-size:11px;color:var(--gray-500)}
+    .row-btns{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+
+    /* Buttons */
+    .btn{padding:6px 12px;border-radius:7px;border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+    .btn-ok{background:var(--green-pale);color:var(--green)}
+    .btn-ok:hover{background:var(--green);color:#fff}
+    .btn-del{background:var(--red-pale);color:var(--red)}
+    .btn-del:hover{background:var(--red);color:#fff}
+    .btn-edit{background:var(--blue-pale);color:var(--blue)}
+    .btn-edit:hover{background:var(--blue);color:#fff}
+    .btn-rej{background:rgba(227,179,65,.15);color:var(--yellow-dark)}
+    .btn-rej:hover{background:var(--yellow-dark);color:#fff}
+
+    /* ── EDIT MODAL ── */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-bg.open{display:flex}
+    .modal-box{background:var(--surface);border:1px solid var(--gray-200);border-radius:14px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;padding:24px;position:relative}
+    .modal-title{font-size:17px;font-weight:800;margin-bottom:18px}
+    .modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;background:var(--surface3);border:none;cursor:pointer;color:var(--gray-700);font-size:13px;display:flex;align-items:center;justify-content:center}
+    .modal-close:hover{background:var(--gray-200)}
+    .modal-tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:16px}
+    .modal-tab{padding:9px 16px;border:none;background:transparent;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+    .modal-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .tab-panel{display:none}
+    .tab-panel.on{display:block}
+    .form-g{margin-bottom:14px}
+    .form-lbl{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:5px}
+    .req{color:var(--red);margin-left:2px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn-primary{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:9px;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s}
+    .btn-primary:hover{background:var(--green-light)}
+    .btn-secondary{width:100%;padding:10px;background:transparent;color:var(--gray-500);border:1.5px solid var(--gray-200);border-radius:9px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;transition:all .15s}
+    .btn-secondary:hover{border-color:var(--red);color:var(--red)}
+
+    /* Pin map */
+    #pin-map{width:100%;height:200px;border-radius:10px;border:1.5px solid var(--gray-200);margin-top:6px;cursor:crosshair}
+    .pin-status{font-size:12px;color:var(--gray-500);margin-top:4px;display:flex;align-items:center;gap:4px}
+    .pin-status.set{color:var(--green)}
+
+    /* Menu items in edit */
+    .menu-item-row{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px;background:var(--surface3)}
+    .menu-thumb-sm{width:48px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+    .rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px;background:var(--surface3)}
+
+    /* Posts */
+    .post-row{background:var(--surface);border:1px solid var(--gray-200);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+    .post-info{flex:1;min-width:0}
+    .post-title{font-size:13px;font-weight:700;margin-bottom:3px}
+    .post-body-preview{font-size:12px;color:var(--gray-500);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .post-meta{font-size:11px;color:var(--gray-500);margin-top:4px}
+    .post-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:4px}
+
+    /* Image preview */
+    .cover-preview{margin-top:8px;border-radius:8px;overflow:hidden;display:none}
+    .cover-preview img{width:100%;height:130px;object-fit:cover;display:block}
+
+    /* Value stars */
+    .val-pick{display:flex;gap:6px;margin-top:4px}
+    .val-pick i{font-size:24px;color:var(--gray-300);cursor:pointer;transition:color .1s}
+    .val-pick i.on{color:var(--yellow-dark)}
+
+    /* Empty */
+    .empty-state{text-align:center;padding:40px 20px;color:var(--gray-500)}
+    .empty-state i{font-size:36px;color:var(--gray-300);display:block;margin-bottom:12px}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:#E6EDF3;color:#0D1117;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;font-family:var(--font)}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* Pill */
+    .pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;margin-left:4px}
+    .pill-ok{background:var(--green-pale);color:var(--green)}
+    .pill-wait{background:rgba(227,179,65,.15);color:var(--yellow-dark)}
+
+    @media(max-width:767px){
+      .adm-nav{display:none}
+      .adm-content{padding:16px}
+      .form-row{grid-template-columns:1fr}
+      .shop-thumb{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">2RichMap — จัดการร้านค้าและเนื้อหา</div>
+    <div class="login-err" id="pw-err">รหัสผ่านไม่ถูกต้อง</div>
+    <input type="password" class="form-inp" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="btn-login" onclick="checkPw()"><i class="fa fa-unlock"></i> เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header class="adm-header">
+    <span style="font-size:20px">🛡️</span>
+    <span class="adm-logo">2RichMap</span>
+    <span class="adm-logo-sub">Admin Panel</span>
+    <div class="adm-header-right">
+      <a class="hbtn" href="index.html"><i class="fa fa-map-location-dot"></i> ดูแผนที่</a>
+      <button class="hbtn hbtn-red" onclick="logout()"><i class="fa fa-right-from-bracket"></i> ออก</button>
+    </div>
+  </header>
+
+  <div class="adm-body">
+    <!-- SIDEBAR NAV -->
+    <nav class="adm-nav">
+      <div class="nav-item on" onclick="showPanel('dashboard',this)"><i class="fa fa-gauge" style="width:16px"></i> ภาพรวม</div>
+      <div class="nav-item" onclick="showPanel('pending',this)"><i class="fa fa-clock" style="width:16px"></i> รออนุมัติ <span class="nav-badge" id="nav-pend-cnt">0</span></div>
+      <div class="nav-item" onclick="showPanel('shops',this)"><i class="fa fa-store" style="width:16px"></i> ร้านทั้งหมด</div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" onclick="showPanel('add',this)"><i class="fa fa-plus-circle" style="width:16px"></i> เพิ่มร้านใหม่</div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" onclick="showPanel('posts',this)"><i class="fa fa-comments" style="width:16px"></i> ชุมชน</div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="adm-content">
+
+      <!-- DASHBOARD -->
+      <div class="panel on" id="panel-dashboard">
+        <div class="stats-grid" id="dash-stats"></div>
+        <div class="sec-head"><span class="sec-title">รออนุมัติล่าสุด</span></div>
+        <div id="dash-pending-preview"></div>
+      </div>
+
+      <!-- PENDING -->
+      <div class="panel" id="panel-pending">
+        <div class="sec-head">
+          <span class="sec-title">ร้านที่รอตรวจสอบ</span>
+          <span class="sec-count" id="pend-count"></span>
+        </div>
+        <div id="pending-list"></div>
+      </div>
+
+      <!-- ALL SHOPS -->
+      <div class="panel" id="panel-shops">
+        <div class="sec-head">
+          <span class="sec-title">ร้านทั้งหมด</span>
+          <span class="sec-count" id="shops-count"></span>
+        </div>
+        <div style="margin-bottom:14px">
+          <input type="text" class="form-inp" id="shop-search" placeholder="ค้นหาร้าน..." oninput="renderShopsList()" style="max-width:320px;margin-bottom:0">
+        </div>
+        <div id="shops-list"></div>
+      </div>
+
+      <!-- ADD SHOP -->
+      <div class="panel" id="panel-add">
+        <div class="sec-head"><span class="sec-title">เพิ่มร้านใหม่ (Admin)</span></div>
+        <div style="max-width:580px">
+          <div class="form-g">
+            <label class="form-lbl">ชื่อร้าน<span class="req">*</span></label>
+            <input type="text" class="form-inp" id="a-name" placeholder="เช่น ข้าวแกงป้าแดง">
+          </div>
+          <div class="form-row">
+            <div class="form-g">
+              <label class="form-lbl">หมวดหมู่<span class="req">*</span></label>
+              <select class="form-sel" id="a-cat">
+                <option value="">-- เลือก --</option>
+                <option value="street">🍢 Street Food</option>
+                <option value="restaurant">🍜 ร้านอาหาร</option>
+                <option value="vendor">🛒 แผงลอย</option>
+                <option value="market">🏪 ตลาดนัด</option>
+                <option value="convenience">🏬 สะดวกซื้อ</option>
+              </select>
+            </div>
+            <div class="form-g">
+              <label class="form-lbl">ย่าน/ที่อยู่<span class="req">*</span></label>
+              <input type="text" class="form-inp" id="a-loc" placeholder="เช่น สาทร, สีลม">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-g">
+              <label class="form-lbl">ราคาต่ำสุด (฿)</label>
+              <input type="number" class="form-inp" id="a-min" placeholder="35">
+            </div>
+            <div class="form-g">
+              <label class="form-lbl">ราคาสูงสุด (฿)</label>
+              <input type="number" class="form-inp" id="a-max" placeholder="80">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-g">
+              <label class="form-lbl">เวลาเปิด-ปิด</label>
+              <input type="text" class="form-inp" id="a-hours" placeholder="08:00-20:00">
+            </div>
+            <div class="form-g">
+              <label class="form-lbl">ที่จอดรถ</label>
+              <select class="form-sel" id="a-park">
+                <option value="no">❌ ไม่มี</option>
+                <option value="yes">✅ มี</option>
+                <option value="nearby">🅿️ ใกล้เคียง</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-g">
+            <label class="form-lbl">ความคุ้มค่า (1-5)</label>
+            <div class="val-pick" id="a-val-pick">
+              <i class="fa fa-star" data-v="1" onclick="pickAddVal(1)"></i>
+              <i class="fa fa-star" data-v="2" onclick="pickAddVal(2)"></i>
+              <i class="fa fa-star" data-v="3" onclick="pickAddVal(3)"></i>
+              <i class="fa fa-star" data-v="4" onclick="pickAddVal(4)"></i>
+              <i class="fa fa-star" data-v="5" onclick="pickAddVal(5)"></i>
+            </div>
+          </div>
+          <div class="form-g">
+            <label class="form-lbl">รูปหน้าปก (URL)</label>
+            <input type="text" class="form-inp" id="a-cover" placeholder="https://..." oninput="previewAddCover()">
+            <div class="cover-preview" id="a-cover-preview"><img id="a-cover-img" alt=""></div>
+          </div>
+          <div class="form-g">
+            <label class="form-lbl">คำอธิบายร้าน</label>
+            <textarea class="form-ta" id="a-desc" placeholder="บอกลูกค้าว่าเมนูเด็ดคืออะไร..."></textarea>
+          </div>
+          <div class="form-g">
+            <label class="form-lbl">📍 ตำแหน่งร้าน<span class="req">*</span></label>
+            <div style="display:flex;gap:8px;margin-bottom:6px">
+              <input type="text" class="form-inp" id="a-addr" placeholder="พิมพ์ที่อยู่แล้วกด Enter หรือคลิกบนแผนที่" onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddAddr()}" style="flex:1;margin-bottom:0">
+              <button type="button" onclick="searchAddAddr()" style="flex-shrink:0;padding:10px 14px;background:var(--green);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font);font-weight:600">ค้นหา</button>
+            </div>
+            <div id="pin-map"></div>
+            <div class="pin-status" id="add-pin-status"><i class="fa fa-circle-info"></i> คลิกบนแผนที่เพื่อปักหมุด</div>
+          </div>
+          <div style="display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:14px;margin-top:4px">
+            <div class="modal-tab on" id="am-tab-menus" onclick="switchAddMenuTab('menus')">เมนู</div>
+            <div class="modal-tab" id="am-tab-wongnai" onclick="switchAddMenuTab('wongnai')">Wongnai Link</div>
+          </div>
+          <div id="am-menus-panel">
+            <div id="a-menus-list"></div>
+            <button type="button" class="btn btn-ok" style="margin-top:4px" onclick="addMenuEntry()"><i class="fa fa-plus"></i> เพิ่มเมนู</button>
+          </div>
+          <div id="am-wongnai-panel" style="display:none">
+            <div class="form-g">
+              <label class="form-lbl">Wongnai URL</label>
+              <input type="text" class="form-inp" id="a-wongnai" placeholder="https://www.wongnai.com/...">
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addShopDirect()"><i class="fa fa-check-circle"></i> บันทึกร้านลงแผนที่</button>
+          <button class="btn-secondary" onclick="resetAddForm()"><i class="fa fa-rotate-left"></i> ล้างฟอร์ม</button>
+        </div>
+      </div>
+
+      <!-- POSTS -->
+      <div class="panel" id="panel-posts">
+        <div class="sec-head">
+          <span class="sec-title">โพสต์ชุมชน</span>
+          <span class="sec-count" id="posts-count"></span>
+        </div>
+        <div id="posts-list"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- EDIT SHOP MODAL -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEditModal()"><i class="fa fa-times"></i></button>
+    <div class="modal-title" id="edit-modal-title">✏️ แก้ไขร้าน</div>
+    <div class="modal-tabs">
+      <button class="modal-tab on" onclick="switchEditTab('info',this)">ข้อมูลร้าน</button>
+      <button class="modal-tab" onclick="switchEditTab('menus',this)">เมนู</button>
+      <button class="modal-tab" onclick="switchEditTab('reviews',this)">รีวิว</button>
+    </div>
+    <!-- Info -->
+    <div class="tab-panel on" id="et-info">
+      <div class="form-g">
+        <label class="form-lbl">ชื่อร้าน<span class="req">*</span></label>
+        <input type="text" class="form-inp" id="e-name">
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">หมวดหมู่</label>
+          <select class="form-sel" id="e-cat">
+            <option value="street">🍢 Street Food</option>
+            <option value="restaurant">🍜 ร้านอาหาร</option>
+            <option value="vendor">🛒 แผงลอย</option>
+            <option value="market">🏪 ตลาดนัด</option>
+            <option value="convenience">🏬 สะดวกซื้อ</option>
+          </select>
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ย่าน/ที่อยู่</label>
+          <input type="text" class="form-inp" id="e-loc">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">ราคาต่ำสุด (฿)</label>
+          <input type="number" class="form-inp" id="e-min">
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ราคาสูงสุด (฿)</label>
+          <input type="number" class="form-inp" id="e-max">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-g">
+          <label class="form-lbl">ความคุ้มค่า (1-5)</label>
+          <input type="number" class="form-inp" id="e-value" min="0" max="5">
+        </div>
+        <div class="form-g">
+          <label class="form-lbl">ที่จอดรถ</label>
+          <select class="form-sel" id="e-park">
+            <option value="no">❌ ไม่มี</option>
+            <option value="yes">✅ มี</option>
+            <option value="nearby">🅿️ ใกล้เคียง</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">เวลาเปิด-ปิด</label>
+        <input type="text" class="form-inp" id="e-hours" placeholder="08:00-20:00">
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">รูปหน้าปก (URL)</label>
+        <input type="text" class="form-inp" id="e-cover" oninput="editPreviewCover()">
+        <div class="cover-preview" id="e-cover-preview"><img id="e-cover-img" alt=""></div>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">คำอธิบาย</label>
+        <textarea class="form-ta" id="e-desc"></textarea>
+      </div>
+      <div class="form-g">
+        <label class="form-lbl">Wongnai URL</label>
+        <input type="text" class="form-inp" id="e-wongnai">
+      </div>
+    </div>
+    <!-- Menus -->
+    <div class="tab-panel" id="et-menus">
+      <div id="e-menus-list"></div>
+      <button class="btn btn-ok" style="margin-top:4px" onclick="eAddMenu()"><i class="fa fa-plus"></i> เพิ่มเมนู</button>
+    </div>
+    <!-- Reviews -->
+    <div class="tab-panel" id="et-reviews">
+      <div id="e-reviews-list"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--gray-200)">
+      <button class="btn-primary" style="flex:2;margin-top:0" onclick="saveEdit()"><i class="fa fa-check"></i> บันทึก</button>
+      <button class="btn-secondary" style="width:auto;padding:10px 20px;margin-top:0" onclick="closeEditModal()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const PW = '2rich';
+const LS_SHOPS = '2rm_shops', LS_PENDING = '2rm_pending', LS_POSTS = '2rm_posts';
+const CAT = {
+  street:     {label:'Street Food', color:'#FF7043', icon:'🍢'},
+  restaurant: {label:'ร้านอาหาร',   color:'#58A6FF', icon:'🍜'},
+  vendor:     {label:'แผงลอย',      color:'#A371F7', icon:'🛒'},
+  market:     {label:'ตลาดนัด',     color:'#E3B341', icon:'🏪'},
+  convenience:{label:'สะดวกซื้อ',  color:'#3FB950', icon:'🏬'}
+};
+const PARKING = {yes:'✅ มีที่จอด', no:'❌ ไม่มี', nearby:'🅿️ ใกล้เคียง'};
+
+// ── STATE ────────────────────────────────────────────────
+let shops = [], pendingShops = [], posts = [];
+let editingId = null;
+let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
+let addMenus = [];
+let addVal = 0;
+
+// ── AUTH ─────────────────────────────────────────────────
+function checkPw() {
+  const v = document.getElementById('pw-input').value;
+  if (v === PW) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    loadData();
+    renderAll();
+    setTimeout(initAddMap, 400);
+  } else {
+    document.getElementById('pw-err').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+function logout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPw();
+});
+
+// ── DATA ─────────────────────────────────────────────────
+function loadData() {
+  try {
+    const s = localStorage.getItem(LS_SHOPS);
+    const p = localStorage.getItem(LS_PENDING);
+    const po = localStorage.getItem(LS_POSTS);
+    shops = s ? JSON.parse(s) : [];
+    pendingShops = p ? JSON.parse(p) : [];
+    posts = po ? JSON.parse(po) : [];
+  } catch(e) { shops = []; pendingShops = []; posts = []; }
+}
+function saveData() {
+  localStorage.setItem(LS_SHOPS, JSON.stringify(shops));
+  localStorage.setItem(LS_PENDING, JSON.stringify(pendingShops));
+  localStorage.setItem(LS_POSTS, JSON.stringify(posts));
+}
+
+// ── NAVIGATION ───────────────────────────────────────────
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById(`panel-${id}`).classList.add('on');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  if (el) el.classList.add('on');
+  // Render on demand
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'pending') renderPending();
+  if (id === 'shops') renderShopsList();
+  if (id === 'posts') renderPosts();
+  if (id === 'add') setTimeout(()=> { if(addPinMap) addPinMap.invalidateSize(); }, 300);
+}
+
+// ── RENDER ALL ───────────────────────────────────────────
+function renderAll() {
+  renderDashboard();
+  updateBadges();
+}
+
+function updateBadges() {
+  document.getElementById('nav-pend-cnt').textContent = pendingShops.length;
+  document.getElementById('nav-pend-cnt').style.display = pendingShops.length ? 'inline-block' : 'none';
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-n">${shops.length}</div><div class="stat-l">ร้านทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-n warn">${pendingShops.length}</div><div class="stat-l">รออนุมัติ</div></div>
+    <div class="stat-card"><div class="stat-n">${posts.length}</div><div class="stat-l">โพสต์ชุมชน</div></div>
+    <div class="stat-card"><div class="stat-n">${shops.reduce((a,s)=>a+s.reviews,0)}</div><div class="stat-l">รีวิวทั้งหมด</div></div>`;
+
+  const pend = pendingShops.slice(0, 3);
+  document.getElementById('dash-pending-preview').innerHTML = pend.length
+    ? pend.map(s => shopRowHtml(s, true)).join('')
+    : '<div class="empty-state"><i class="fa fa-check-circle"></i>ไม่มีร้านรออนุมัติ</div>';
+}
+
+// ── PENDING ──────────────────────────────────────────────
+function renderPending() {
+  document.getElementById('pend-count').textContent = `${pendingShops.length} รายการ`;
+  document.getElementById('pending-list').innerHTML = pendingShops.length
+    ? pendingShops.map(s => shopRowHtml(s, true)).join('')
+    : '<div class="empty-state"><i class="fa fa-check-circle"></i>ไม่มีร้านรออนุมัติ ✅</div>';
+}
+
+function shopRowHtml(s, isPending = false) {
+  const c = CAT[s.cat] || {icon:'🍽️', color:'#666'};
+  const p = s.priceMin === s.priceMax ? `${s.priceMin}฿` : `${s.priceMin}-${s.priceMax}฿`;
+  const btns = isPending
+    ? `<button class="btn btn-ok" onclick="approve(${s.id})"><i class="fa fa-check"></i> อนุมัติ</button>
+       <button class="btn btn-rej" onclick="reject(${s.id})"><i class="fa fa-times"></i> ปฏิเสธ</button>`
+    : `<button class="btn btn-edit" onclick="openEdit(${s.id})"><i class="fa fa-pen"></i> แก้ไข</button>
+       <button class="btn btn-del" onclick="delShop(${s.id})"><i class="fa fa-trash"></i> ลบ</button>`;
+  return `<div class="shop-row">
+    <img class="shop-thumb" src="${s.cover||''}" onerror="this.style.background='var(--surface3)'" alt="">
+    <div class="shop-info">
+      <div class="shop-name">${c.icon} ${s.name}${isPending?'<span class="pill pill-wait">รออนุมัติ</span>':''}</div>
+      <div class="shop-meta">${s.location} · ${p} · คุ้มค่า ${s.value||0}/5 · ${PARKING[s.parking]||''}</div>
+      ${s.hours?`<div class="shop-meta">⏰ ${s.hours}</div>`:''}
+    </div>
+    <div class="row-btns">${btns}</div>
+  </div>`;
+}
+
+function approve(id) {
+  const i = pendingShops.findIndex(s => s.id === id); if (i < 0) return;
+  const s = {...pendingShops[i], status: 'approved'};
+  shops.push(s);
+  pendingShops.splice(i, 1);
+  saveData(); loadData(); renderDashboard(); renderPending(); updateBadges();
+  showToast(`✅ อนุมัติ "${s.name}" แล้ว`);
+}
+function reject(id) {
+  const i = pendingShops.findIndex(s => s.id === id); if (i < 0) return;
+  const n = pendingShops[i].name;
+  pendingShops.splice(i, 1);
+  saveData(); renderPending(); updateBadges();
+  showToast(`ปฏิเสธ "${n}" แล้ว`);
+}
+
+// ── ALL SHOPS ────────────────────────────────────────────
+function renderShopsList() {
+  const q = (document.getElementById('shop-search')?.value || '').toLowerCase();
+  const list = shops.filter(s => !q || s.name.toLowerCase().includes(q) || s.location.toLowerCase().includes(q));
+  document.getElementById('shops-count').textContent = `${list.length} ร้าน`;
+  document.getElementById('shops-list').innerHTML = list.length
+    ? list.map(s => shopRowHtml(s, false)).join('')
+    : '<div class="empty-state"><i class="fa fa-store"></i>ไม่พบร้านที่ค้นหา</div>';
+}
+
+function delShop(id) {
+  const s = shops.find(x => x.id === id); if (!s) return;
+  if (!confirm(`ลบ "${s.name}" ?`)) return;
+  shops = shops.filter(x => x.id !== id);
+  saveData(); renderShopsList(); renderDashboard();
+  showToast(`ลบ "${s.name}" แล้ว`);
+}
+
+// ── EDIT SHOP ────────────────────────────────────────────
+function openEdit(id) {
+  const s = shops.find(x => x.id === id); if (!s) return;
+  editingId = id;
+  document.getElementById('edit-modal-title').textContent = `✏️ ${s.name}`;
+  document.getElementById('e-name').value = s.name;
+  document.getElementById('e-cat').value = s.cat;
+  document.getElementById('e-loc').value = s.location;
+  document.getElementById('e-min').value = s.priceMin;
+  document.getElementById('e-max').value = s.priceMax;
+  document.getElementById('e-value').value = s.value || 0;
+  document.getElementById('e-park').value = s.parking || 'no';
+  document.getElementById('e-hours').value = s.hours || '';
+  document.getElementById('e-cover').value = s.cover || '';
+  document.getElementById('e-desc').value = s.desc || '';
+  document.getElementById('e-wongnai').value = s.wongnai || '';
+  const prev = document.getElementById('e-cover-preview');
+  const img = document.getElementById('e-cover-img');
+  if (s.cover) { img.src = s.cover; prev.style.display = 'block'; } else prev.style.display = 'none';
+  renderEditMenus(s); renderEditReviews(s);
+  // Reset to info tab
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('on'));
+  document.querySelector('.modal-tab').classList.add('on');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('et-info').classList.add('on');
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
+function switchEditTab(t, btn) {
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById(`et-${t}`).classList.add('on');
+}
+
+function editPreviewCover() {
+  const v = document.getElementById('e-cover').value.trim();
+  const prev = document.getElementById('e-cover-preview');
+  const img = document.getElementById('e-cover-img');
+  if (v) { img.src = v; prev.style.display = 'block'; } else prev.style.display = 'none';
+}
+
+function renderEditMenus(s) {
+  const el = document.getElementById('e-menus-list');
+  if (!s.menus || !s.menus.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0">ยังไม่มีเมนู</div>'; return; }
+  el.innerHTML = s.menus.map((m, i) => `
+    <div class="menu-item-row">
+      <img class="menu-thumb-sm" src="${m.img}" onerror="this.style.background='var(--surface2)'" alt="">
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+        <input type="text" class="form-inp" value="${m.name}" id="emn-${i}" placeholder="ชื่อเมนู" style="padding:6px 10px;font-size:12px">
+        <div style="display:flex;gap:6px">
+          <input type="number" class="form-inp" value="${m.price}" id="emp-${i}" placeholder="฿" style="padding:6px 10px;font-size:12px;width:80px;flex-shrink:0">
+          <input type="text" class="form-inp" value="${m.img}" id="emi-${i}" placeholder="URL รูป" style="padding:6px 10px;font-size:12px;flex:1">
+        </div>
+      </div>
+      <button class="btn btn-del" onclick="eRemoveMenu(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+function eCollectMenus() {
+  const s = shops.find(x => x.id === editingId); if (!s) return;
+  s.menus.forEach((m, i) => {
+    const n = document.getElementById(`emn-${i}`);
+    const p = document.getElementById(`emp-${i}`);
+    const im = document.getElementById(`emi-${i}`);
+    if (n) m.name = n.value.trim() || m.name;
+    if (p) m.price = parseInt(p.value) || m.price;
+    if (im) m.img = im.value.trim();
+  });
+}
+
+function eAddMenu() {
+  const s = shops.find(x => x.id === editingId); if (!s) return;
+  eCollectMenus();
+  s.menus.push({name: 'เมนูใหม่', price: 0, img: ''});
+  renderEditMenus(s);
+}
+
+function eRemoveMenu(i) {
+  const s = shops.find(x => x.id === editingId); if (!s) return;
+  eCollectMenus();
+  s.menus.splice(i, 1);
+  renderEditMenus(s);
+}
+
+function renderEditReviews(s) {
+  const el = document.getElementById('e-reviews-list');
+  if (!s.reviewList || !s.reviewList.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0">ยังไม่มีรีวิว</div>'; return; }
+  el.innerHTML = s.reviewList.map((r, i) => `
+    <div class="rev-row">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;margin-bottom:2px">${r.name} ${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="font-size:12px;color:var(--gray-700)">"${r.text}"</div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:2px">${r.date}</div>
+      </div>
+      <button class="btn btn-del" onclick="eDeleteReview(${i})" style="flex-shrink:0">🗑️</button>
+    </div>`).join('');
+}
+
+function eDeleteReview(i) {
+  const s = shops.find(x => x.id === editingId); if (!s) return;
+  s.reviewList.splice(i, 1);
+  s.reviews = Math.max(0, s.reviews - 1);
+  renderEditReviews(s);
+  showToast('ลบรีวิวแล้ว');
+}
+
+function saveEdit() {
+  const s = shops.find(x => x.id === editingId); if (!s) return;
+  eCollectMenus();
+  s.name = document.getElementById('e-name').value.trim() || s.name;
+  s.cat = document.getElementById('e-cat').value;
+  s.location = document.getElementById('e-loc').value.trim() || s.location;
+  s.priceMin = parseInt(document.getElementById('e-min').value) || s.priceMin;
+  s.priceMax = parseInt(document.getElementById('e-max').value) || s.priceMax;
+  s.value = Math.min(5, Math.max(0, parseInt(document.getElementById('e-value').value) || 0));
+  s.parking = document.getElementById('e-park').value;
+  s.hours = document.getElementById('e-hours').value.trim();
+  const cv = document.getElementById('e-cover').value.trim();
+  if (cv) s.cover = cv;
+  s.desc = document.getElementById('e-desc').value.trim();
+  s.wongnai = document.getElementById('e-wongnai').value.trim();
+  saveData(); renderShopsList(); closeEditModal();
+  showToast(`✅ บันทึก "${s.name}" แล้ว`);
+}
+
+// ── ADD SHOP DIRECTLY ────────────────────────────────────
+let addPinInited = false;
+function initAddMap() {
+  if (addPinInited) { addPinMap.invalidateSize(); return; }
+  addPinMap = L.map('pin-map', {zoomControl: true}).setView([13.756, 100.502], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(addPinMap);
+  addPinMap.on('click', e => {
+    addPinLat = e.latlng.lat; addPinLng = e.latlng.lng;
+    if (addPinMarker) addPinMap.removeLayer(addPinMarker);
+    addPinMarker = L.marker([addPinLat, addPinLng], {draggable: true}).addTo(addPinMap);
+    addPinMarker.on('dragend', ev => {
+      addPinLat = ev.target.getLatLng().lat;
+      addPinLng = ev.target.getLatLng().lng;
+      updateAddPinStatus();
+    });
+    updateAddPinStatus();
+  });
+  addPinInited = true;
+}
+
+async function searchAddAddr() {
+  const q = document.getElementById('a-addr').value.trim();
+  if (!q) { showToast('กรุณาพิมพ์ที่อยู่ก่อน'); return; }
+  showToast('กำลังค้นหา...');
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ' ประเทศไทย')}&format=json&limit=1&accept-language=th`;
+    const res = await fetch(url, {headers: {'Accept-Language': 'th'}});
+    const data = await res.json();
+    if (data.length > 0) {
+      const {lat, lon} = data[0];
+      addPinLat = parseFloat(lat); addPinLng = parseFloat(lon);
+      addPinMap.setView([addPinLat, addPinLng], 16);
+      if (addPinMarker) addPinMap.removeLayer(addPinMarker);
+      addPinMarker = L.marker([addPinLat, addPinLng], {draggable: true}).addTo(addPinMap);
+      addPinMarker.on('dragend', ev => {
+        addPinLat = ev.target.getLatLng().lat;
+        addPinLng = ev.target.getLatLng().lng;
+        updateAddPinStatus();
+      });
+      updateAddPinStatus();
+      showToast('พบตำแหน่งแล้ว 📍');
+    } else showToast('ไม่พบที่อยู่นี้');
+  } catch(e) { showToast('ค้นหาไม่สำเร็จ ลองคลิกบนแผนที่แทน'); }
+}
+
+function updateAddPinStatus() {
+  const st = document.getElementById('add-pin-status');
+  if (st && addPinLat) {
+    st.className = 'pin-status set';
+    st.innerHTML = `<i class="fa fa-check-circle"></i> ปักหมุดแล้ว: ${addPinLat.toFixed(5)}, ${addPinLng.toFixed(5)}`;
+  }
+}
+
+function pickAddVal(v) {
+  addVal = v;
+  document.querySelectorAll('#a-val-pick i').forEach(i => i.classList.toggle('on', +i.dataset.v <= v));
+}
+
+function previewAddCover() {
+  const v = document.getElementById('a-cover').value.trim();
+  const prev = document.getElementById('a-cover-preview');
+  const img = document.getElementById('a-cover-img');
+  if (v) { img.src = v; prev.style.display = 'block'; } else prev.style.display = 'none';
+}
+
+// Menu entries for add form
+let addMenuEntries = [];
+function renderAddMenus() {
+  const el = document.getElementById('a-menus-list');
+  if (!addMenuEntries.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:4px 0">ยังไม่มีเมนู (ไม่บังคับ)</div>'; return; }
+  el.innerHTML = addMenuEntries.map((m, i) => `
+    <div class="menu-item-row">
+      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap;min-width:0">
+        <input type="text" class="form-inp" value="${m.name}" id="amn-${i}" placeholder="ชื่อเมนู" style="padding:6px 10px;font-size:12px;flex:2;min-width:100px">
+        <input type="number" class="form-inp" value="${m.price}" id="amp-${i}" placeholder="฿" style="padding:6px 10px;font-size:12px;width:80px;flex-shrink:0">
+        <input type="text" class="form-inp" value="${m.img}" id="ami-${i}" placeholder="URL รูป" style="padding:6px 10px;font-size:12px;flex:3;min-width:120px">
+      </div>
+      <button class="btn btn-del" onclick="removeMenuEntry(${i})">🗑️</button>
+    </div>`).join('');
+}
+
+function addMenuEntry() {
+  collectAddMenuEntries();
+  addMenuEntries.push({name: 'เมนูใหม่', price: 0, img: ''});
+  renderAddMenus();
+}
+
+function removeMenuEntry(i) {
+  collectAddMenuEntries();
+  addMenuEntries.splice(i, 1);
+  renderAddMenus();
+}
+
+function collectAddMenuEntries() {
+  addMenuEntries.forEach((m, i) => {
+    const n = document.getElementById(`amn-${i}`);
+    const p = document.getElementById(`amp-${i}`);
+    const im = document.getElementById(`ami-${i}`);
+    if (n) m.name = n.value.trim() || m.name;
+    if (p) m.price = parseInt(p.value) || 0;
+    if (im) m.img = im.value.trim();
+  });
+}
+
+function switchAddMenuTab(t) {
+  document.getElementById('am-menus-panel').style.display = t === 'menus' ? 'block' : 'none';
+  document.getElementById('am-wongnai-panel').style.display = t === 'wongnai' ? 'block' : 'none';
+  document.getElementById('am-tab-menus').classList.toggle('on', t === 'menus');
+  document.getElementById('am-tab-wongnai').classList.toggle('on', t === 'wongnai');
+}
+
+function addShopDirect() {
+  const name = document.getElementById('a-name').value.trim();
+  const cat = document.getElementById('a-cat').value;
+  const loc = document.getElementById('a-loc').value.trim();
+  if (!name || !cat || !loc) { showToast('กรุณากรอกชื่อร้าน หมวดหมู่ และย่านก่อน'); return; }
+  if (!addPinLat) { showToast('กรุณาปักหมุดบนแผนที่ก่อน 📍'); return; }
+  collectAddMenuEntries();
+  const newShop = {
+    id: Date.now(),
+    name, cat,
+    location: loc,
+    lat: addPinLat, lng: addPinLng,
+    priceMin: parseInt(document.getElementById('a-min').value) || 0,
+    priceMax: parseInt(document.getElementById('a-max').value) || parseInt(document.getElementById('a-min').value) || 0,
+    value: addVal,
+    rating: 0, reviews: 0,
+    status: 'approved',
+    reportCount: 0,
+    parking: document.getElementById('a-park').value,
+    hours: document.getElementById('a-hours').value.trim(),
+    cover: document.getElementById('a-cover').value.trim(),
+    desc: document.getElementById('a-desc').value.trim(),
+    wongnai: document.getElementById('a-wongnai')?.value.trim() || '',
+    menus: [...addMenuEntries],
+    reviewList: []
+  };
+  shops.push(newShop);
+  saveData();
+  renderShopsList(); renderDashboard();
+  resetAddForm();
+  showToast(`✅ เพิ่ม "${name}" ลงแผนที่แล้ว!`);
+}
+
+function resetAddForm() {
+  ['a-name','a-loc','a-min','a-max','a-hours','a-cover','a-desc','a-addr','a-wongnai'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('a-cat').value = '';
+  document.getElementById('a-park').value = 'no';
+  document.getElementById('a-cover-preview').style.display = 'none';
+  document.querySelectorAll('#a-val-pick i').forEach(i => i.classList.remove('on'));
+  addVal = 0; addMenuEntries = []; renderAddMenus();
+  addPinLat = null; addPinLng = null;
+  if (addPinMarker) { addPinMap.removeLayer(addPinMarker); addPinMarker = null; }
+  const st = document.getElementById('add-pin-status');
+  st.className = 'pin-status';
+  st.innerHTML = '<i class="fa fa-circle-info"></i> คลิกบนแผนที่เพื่อปักหมุด';
+}
+
+// ── POSTS ────────────────────────────────────────────────
+const TAG_LABELS = {tip:'💡 ทิปประหยัด', deal:'🏷️ ดีล', question:'❓ ถาม', review:'⭐ รีวิว'};
+const TAG_COLORS = {tip:'#1f6feb', deal:'#9e6a03', question:'#6e40c9', review:'#1a7f37'};
+
+function renderPosts() {
+  document.getElementById('posts-count').textContent = `${posts.length} โพสต์`;
+  document.getElementById('posts-list').innerHTML = posts.length
+    ? posts.map(p => `
+      <div class="post-row">
+        <div class="post-info">
+          <div class="post-title">
+            <span class="post-tag" style="background:rgba(88,166,255,.12);color:${TAG_COLORS[p.tag]||'#58A6FF'}">${TAG_LABELS[p.tag]||p.tag}</span>
+            ${p.title}
+          </div>
+          <div class="post-body-preview">${p.body}</div>
+          <div class="post-meta">${p.author} · ${p.time} · 🔥${p.votes} · 💬${p.comments.length}</div>
+        </div>
+        <button class="btn btn-del" onclick="deletePost(${p.id})"><i class="fa fa-trash"></i></button>
+      </div>`).join('')
+    : '<div class="empty-state"><i class="fa fa-comments"></i>ยังไม่มีโพสต์</div>';
+}
+
+function deletePost(id) {
+  const p = posts.find(x => x.id === id); if (!p) return;
+  if (!confirm(`ลบโพสต์ "${p.title.slice(0,30)}..." ?`)) return;
+  posts = posts.filter(x => x.id !== id);
+  saveData(); renderPosts(); renderDashboard();
+  showToast('ลบโพสต์แล้ว');
+}
+
+// ── TOAST ────────────────────────────────────────────────
+let toastT;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────
+renderAddMenus();
+</script>
+</body>
+</html>
