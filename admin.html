@@ -561,19 +561,25 @@ function shopRowHtml(s, isPending = false) {
 }
 
 function approve(id) {
-  const i = pendingShops.findIndex(s => s.id === id); if (i < 0) return;
+  id = Number(id);
+  const i = pendingShops.findIndex(s => Number(s.id) === id);
+  if (i < 0) { showToast('❌ ไม่พบร้านนี้ในคิวรออนุมัติ'); return; }
   const s = {...pendingShops[i], status: 'approved'};
   shops.push(s);
   pendingShops.splice(i, 1);
-  saveData(); loadData(); renderDashboard(); renderPending(); updateBadges();
+  saveData();
+  renderDashboard(); renderPending(); renderShopsList(); updateBadges();
   showToast(`✅ อนุมัติ "${s.name}" แล้ว`);
 }
 function reject(id) {
-  const i = pendingShops.findIndex(s => s.id === id); if (i < 0) return;
+  id = Number(id);
+  const i = pendingShops.findIndex(s => Number(s.id) === id);
+  if (i < 0) { showToast('❌ ไม่พบร้านนี้ในคิวรออนุมัติ'); return; }
   const n = pendingShops[i].name;
   pendingShops.splice(i, 1);
-  saveData(); renderPending(); updateBadges();
-  showToast(`ปฏิเสธ "${n}" แล้ว`);
+  saveData();
+  renderDashboard(); renderPending(); updateBadges();
+  showToast(`🚫 ปฏิเสธ "${n}" แล้ว`);
 }
 
 // ── ALL SHOPS ────────────────────────────────────────────
