@@ -545,10 +545,10 @@ function shopRowHtml(s, isPending = false) {
   const c = CAT[s.cat] || {icon:'🍽️', color:'#666'};
   const p = s.priceMin === s.priceMax ? `${s.priceMin}฿` : `${s.priceMin}-${s.priceMax}฿`;
   const btns = isPending
-    ? `<button class="btn btn-ok" onclick="approve(${s.id})"><i class="fa fa-check"></i> อนุมัติ</button>
-       <button class="btn btn-rej" onclick="reject(${s.id})"><i class="fa fa-times"></i> ปฏิเสธ</button>`
-    : `<button class="btn btn-edit" onclick="openEdit(${s.id})"><i class="fa fa-pen"></i> แก้ไข</button>
-       <button class="btn btn-del" onclick="delShop(${s.id})"><i class="fa fa-trash"></i> ลบ</button>`;
+    ? `<button class="btn btn-ok" onclick="approve('${s.id}')"><i class="fa fa-check"></i> อนุมัติ</button>
+       <button class="btn btn-rej" onclick="reject('${s.id}')"><i class="fa fa-times"></i> ปฏิเสธ</button>`
+    : `<button class="btn btn-edit" onclick="openEdit('${s.id}')"><i class="fa fa-pen"></i> แก้ไข</button>
+       <button class="btn btn-del" onclick="delShop('${s.id}')"><i class="fa fa-trash"></i> ลบ</button>`;
   return `<div class="shop-row">
     <img class="shop-thumb" src="${s.cover||''}" onerror="this.style.background='var(--surface3)'" alt="">
     <div class="shop-info">
@@ -561,9 +561,10 @@ function shopRowHtml(s, isPending = false) {
 }
 
 function approve(id) {
-  id = Number(id);
-  const i = pendingShops.findIndex(s => Number(s.id) === id);
-  if (i < 0) { showToast('❌ ไม่พบร้านนี้ในคิวรออนุมัติ'); return; }
+  id = String(id);
+  loadData(); // อ่านข้อมูลสดจาก localStorage เสมอ
+  const i = pendingShops.findIndex(s => String(s.id) === id);
+  if (i < 0) { showToast('❌ ไม่พบร้านในคิว (id=' + id + ')'); return; }
   const s = {...pendingShops[i], status: 'approved'};
   shops.push(s);
   pendingShops.splice(i, 1);
@@ -572,9 +573,10 @@ function approve(id) {
   showToast(`✅ อนุมัติ "${s.name}" แล้ว`);
 }
 function reject(id) {
-  id = Number(id);
-  const i = pendingShops.findIndex(s => Number(s.id) === id);
-  if (i < 0) { showToast('❌ ไม่พบร้านนี้ในคิวรออนุมัติ'); return; }
+  id = String(id);
+  loadData(); // อ่านข้อมูลสดจาก localStorage เสมอ
+  const i = pendingShops.findIndex(s => String(s.id) === id);
+  if (i < 0) { showToast('❌ ไม่พบร้านในคิว (id=' + id + ')'); return; }
   const n = pendingShops[i].name;
   pendingShops.splice(i, 1);
   saveData();
@@ -593,16 +595,20 @@ function renderShopsList() {
 }
 
 function delShop(id) {
-  const s = shops.find(x => x.id === id); if (!s) return;
+  id = String(id);
+  loadData();
+  const s = shops.find(x => String(x.id) === id); if (!s) return;
   if (!confirm(`ลบ "${s.name}" ?`)) return;
-  shops = shops.filter(x => x.id !== id);
+  shops = shops.filter(x => String(x.id) !== id);
   saveData(); renderShopsList(); renderDashboard();
   showToast(`ลบ "${s.name}" แล้ว`);
 }
 
 // ── EDIT SHOP ────────────────────────────────────────────
 function openEdit(id) {
-  const s = shops.find(x => x.id === id); if (!s) return;
+  id = String(id);
+  loadData();
+  const s = shops.find(x => String(x.id) === id); if (!s) return;
   editingId = id;
   document.getElementById('edit-modal-title').textContent = `✏️ ${s.name}`;
   document.getElementById('e-name').value = s.name;
@@ -662,7 +668,7 @@ function renderEditMenus(s) {
 }
 
 function eCollectMenus() {
-  const s = shops.find(x => x.id === editingId); if (!s) return;
+  const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
   s.menus.forEach((m, i) => {
     const n = document.getElementById(`emn-${i}`);
     const p = document.getElementById(`emp-${i}`);
@@ -674,14 +680,14 @@ function eCollectMenus() {
 }
 
 function eAddMenu() {
-  const s = shops.find(x => x.id === editingId); if (!s) return;
+  const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
   eCollectMenus();
   s.menus.push({name: 'เมนูใหม่', price: 0, img: ''});
   renderEditMenus(s);
 }
 
 function eRemoveMenu(i) {
-  const s = shops.find(x => x.id === editingId); if (!s) return;
+  const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
   eCollectMenus();
   s.menus.splice(i, 1);
   renderEditMenus(s);
@@ -702,7 +708,7 @@ function renderEditReviews(s) {
 }
 
 function eDeleteReview(i) {
-  const s = shops.find(x => x.id === editingId); if (!s) return;
+  const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
   s.reviewList.splice(i, 1);
   s.reviews = Math.max(0, s.reviews - 1);
   renderEditReviews(s);
@@ -710,7 +716,7 @@ function eDeleteReview(i) {
 }
 
 function saveEdit() {
-  const s = shops.find(x => x.id === editingId); if (!s) return;
+  const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
   eCollectMenus();
   s.name = document.getElementById('e-name').value.trim() || s.name;
   s.cat = document.getElementById('e-cat').value;
