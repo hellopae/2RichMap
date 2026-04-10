@@ -200,6 +200,7 @@
       <div class="nav-item" onclick="showPanel('add',this)"><i class="fa fa-plus-circle" style="width:16px"></i> เพิ่มร้านใหม่</div>
       <div class="nav-sep"></div>
       <div class="nav-item" onclick="showPanel('posts',this)"><i class="fa fa-comments" style="width:16px"></i> ชุมชน</div>
+      <div class="nav-item" onclick="showPanel('reports',this)"><i class="fa fa-flag" style="width:16px;color:var(--red)"></i> รายงานปัญหา <span class="nav-badge" id="nav-rpt-cnt" style="background:var(--red);display:none">0</span></div>
     </nav>
 
     <!-- CONTENT -->
@@ -338,6 +339,15 @@
         <div id="posts-list"></div>
       </div>
 
+      <!-- REPORTS -->
+      <div class="panel" id="panel-reports">
+        <div class="sec-head">
+          <span class="sec-title">รายงานปัญหาข้อมูลไม่ถูกต้อง</span>
+          <span class="sec-count" id="reports-count"></span>
+        </div>
+        <div id="reports-list"></div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -438,7 +448,7 @@
 <script>
 // ── CONFIG ──────────────────────────────────────────────
 const PW = '2rich';
-const LS_SHOPS = '2rm_shops', LS_PENDING = '2rm_pending', LS_POSTS = '2rm_posts';
+const LS_SHOPS = '2rm_shops', LS_PENDING = '2rm_pending', LS_POSTS = '2rm_posts', LS_REPORTS = '2rm_reports';
 const CAT = {
   street:     {label:'Street Food', color:'#FF7043', icon:'🍢'},
   restaurant: {label:'ร้านอาหาร',   color:'#58A6FF', icon:'🍜'},
@@ -449,7 +459,7 @@ const CAT = {
 const PARKING = {yes:'✅ มีที่จอด', no:'❌ ไม่มี', nearby:'🅿️ ใกล้เคียง'};
 
 // ── STATE ────────────────────────────────────────────────
-let shops = [], pendingShops = [], posts = [];
+let shops = [], pendingShops = [], posts = [], reports = [];
 let editingId = null;
 let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
 let addMenus = [];
@@ -486,12 +496,15 @@ function loadData() {
     shops = s ? JSON.parse(s) : [];
     pendingShops = p ? JSON.parse(p) : [];
     posts = po ? JSON.parse(po) : [];
-  } catch(e) { shops = []; pendingShops = []; posts = []; }
+    const rp = localStorage.getItem(LS_REPORTS);
+    reports = rp ? JSON.parse(rp) : [];
+  } catch(e) { shops = []; pendingShops = []; posts = []; reports = []; }
 }
 function saveData() {
   localStorage.setItem(LS_SHOPS, JSON.stringify(shops));
   localStorage.setItem(LS_PENDING, JSON.stringify(pendingShops));
   localStorage.setItem(LS_POSTS, JSON.stringify(posts));
+  localStorage.setItem(LS_REPORTS, JSON.stringify(reports));
 }
 
 // ── NAVIGATION ───────────────────────────────────────────
@@ -505,6 +518,7 @@ function showPanel(id, el) {
   if (id === 'pending') renderPending();
   if (id === 'shops') renderShopsList();
   if (id === 'posts') renderPosts();
+  if (id === 'reports') renderReports();
   if (id === 'add') setTimeout(()=> { if(addPinMap) addPinMap.invalidateSize(); }, 300);
 }
 
@@ -512,11 +526,18 @@ function showPanel(id, el) {
 function renderAll() {
   renderDashboard();
   updateBadges();
+  updateReportBadge();
 }
 
 function updateBadges() {
   document.getElementById('nav-pend-cnt').textContent = pendingShops.length;
   document.getElementById('nav-pend-cnt').style.display = pendingShops.length ? 'inline-block' : 'none';
+}
+
+function updateReportBadge() {
+  const cnt = reports.filter(r => !r.resolved).length;
+  const el = document.getElementById('nav-rpt-cnt');
+  if (el) { el.textContent = cnt; el.style.display = cnt ? 'inline-block' : 'none'; }
 }
 
 // ── DASHBOARD ────────────────────────────────────────────
@@ -525,7 +546,8 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-n">${shops.length}</div><div class="stat-l">ร้านทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-n warn">${pendingShops.length}</div><div class="stat-l">รออนุมัติ</div></div>
     <div class="stat-card"><div class="stat-n">${posts.length}</div><div class="stat-l">โพสต์ชุมชน</div></div>
-    <div class="stat-card"><div class="stat-n">${shops.reduce((a,s)=>a+s.reviews,0)}</div><div class="stat-l">รีวิวทั้งหมด</div></div>`;
+    <div class="stat-card"><div class="stat-n">${shops.reduce((a,s)=>a+(s.reviews||0),0)}</div><div class="stat-l">รีวิวทั้งหมด</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--red)">${reports.filter(r=>!r.resolved).length}</div><div class="stat-l">รายงานปัญหา</div></div>`;
 
   const pend = pendingShops.slice(0, 3);
   document.getElementById('dash-pending-preview').innerHTML = pend.length
@@ -922,6 +944,47 @@ function deletePost(id) {
   posts = posts.filter(x => x.id !== id);
   saveData(); renderPosts(); renderDashboard();
   showToast('ลบโพสต์แล้ว');
+}
+
+// ── REPORTS ──────────────────────────────────────────────
+function renderReports() {
+  const unresolved = reports.filter(r => !r.resolved);
+  const resolved = reports.filter(r => r.resolved);
+  const all = [...unresolved, ...resolved];
+  document.getElementById('reports-count').textContent = `${unresolved.length} รายการที่ยังไม่ได้แก้ไข`;
+  document.getElementById('reports-list').innerHTML = all.length
+    ? all.map(r => `
+      <div class="shop-row" style="${r.resolved?'opacity:.5':''}">
+        <div class="shop-info">
+          <div class="shop-name">${r.resolved?'<span style="color:var(--green);font-size:11px">✅ แก้ไขแล้ว</span> ':''}<strong>${r.shopName||'ไม่ระบุ'}</strong></div>
+          <div class="shop-meta" style="margin-top:4px;line-height:1.6">${r.message}</div>
+          <div class="shop-meta" style="margin-top:3px;font-size:10px;color:var(--gray-500)">${r.submittedAt||''}</div>
+        </div>
+        <div class="row-btns">
+          ${!r.resolved?`<button class="btn btn-ok" onclick="resolveReport('${r.id}')"><i class="fa fa-check"></i> แก้ไขแล้ว</button>`:''}
+          <button class="btn btn-del" onclick="deleteReport('${r.id}')"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>`).join('')
+    : '<div class="empty-state"><i class="fa fa-flag"></i>ไม่มีรายงานปัญหา ✅</div>';
+}
+
+function resolveReport(id) {
+  id = String(id);
+  loadData();
+  const r = reports.find(x => String(x.id) === id); if (!r) return;
+  r.resolved = true;
+  saveData();
+  renderReports(); updateReportBadge();
+  showToast('✅ ทำเครื่องหมายแก้ไขแล้ว');
+}
+
+function deleteReport(id) {
+  id = String(id);
+  loadData();
+  reports = reports.filter(x => String(x.id) !== id);
+  saveData();
+  renderReports(); updateReportBadge();
+  showToast('ลบรายงานแล้ว');
 }
 
 // ── TOAST ────────────────────────────────────────────────
