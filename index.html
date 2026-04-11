@@ -517,10 +517,11 @@
     /* ── SIDEBAR TABS ── */
     .sb-tabs{display:flex;border-bottom:2px solid var(--gray-200);flex-shrink:0;background:var(--surface)}
     .sb-tab{
-      flex:1;padding:11px 6px;border:none;background:transparent;font-family:var(--font);
-      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
+      flex:1;padding:11px 4px;border:none;background:transparent;font-family:var(--font);
+      font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-500);
       border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
-      display:flex;align-items:center;justify-content:center;gap:5px
+      display:flex;align-items:center;justify-content:center;gap:4px;
+      white-space:nowrap;overflow:hidden
     }
     .sb-tab.on{color:var(--green);border-bottom-color:var(--green)}
     .sb-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
@@ -756,8 +757,8 @@
 <div id="mobile-nav">
   <div class="mnav">
     <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
-    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>ร้านแนะนำ</span></button>
     <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
+    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>ร้านแนะนำ</span></button>
     <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>กระดานข่าว</span></button>
   </div>
 </div>
@@ -2062,7 +2063,14 @@ function locateMe(){
     err=>{
       btn.classList.remove('loading');
       icon.className='fa fa-location-crosshairs';
-      const msgs={1:'กรุณาอนุญาต GPS ในเบราว์เซอร์ก่อนนะครับ',2:'ไม่พบสัญญาณ GPS',3:'หมดเวลาดึงตำแหน่ง'};
+      const isHttp=location.protocol==='http:';
+      const msgs={
+        1: isHttp
+          ? 'GPS ต้องใช้งานผ่าน https:// — กรุณาเข้าผ่าน 2richmap.com (HTTPS) ครับ'
+          : 'กรุณาอนุญาต GPS ในเบราว์เซอร์ก่อน (คลิกไอคอนล็อคในแถบ URL)',
+        2:'ไม่พบสัญญาณ GPS',
+        3:'หมดเวลาดึงตำแหน่ง — ลองใหม่อีกครั้ง'
+      };
       showToast(msgs[err.code]||'ไม่สามารถดึงตำแหน่งได้');
     },
     {enableHighAccuracy:true,timeout:10000,maximumAge:0}
