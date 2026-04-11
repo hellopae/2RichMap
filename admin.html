@@ -194,12 +194,11 @@
     <!-- SIDEBAR NAV -->
     <nav class="adm-nav">
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><i class="fa fa-gauge" style="width:16px"></i> ภาพรวม</div>
-      <div class="nav-item" onclick="showPanel('pending',this)"><i class="fa fa-clock" style="width:16px"></i> รออนุมัติ <span class="nav-badge" id="nav-pend-cnt">0</span></div>
       <div class="nav-item" onclick="showPanel('shops',this)"><i class="fa fa-store" style="width:16px"></i> ร้านทั้งหมด</div>
       <div class="nav-sep"></div>
       <div class="nav-item" onclick="showPanel('add',this)"><i class="fa fa-plus-circle" style="width:16px"></i> เพิ่มร้านใหม่</div>
       <div class="nav-sep"></div>
-      <div class="nav-item" onclick="showPanel('posts',this)"><i class="fa fa-comments" style="width:16px"></i> ชุมชน</div>
+      <div class="nav-item" onclick="showPanel('posts',this)"><i class="fa fa-comments" style="width:16px"></i> กระดานข่าว</div>
       <div class="nav-item" onclick="showPanel('reports',this)"><i class="fa fa-flag" style="width:16px;color:var(--red)"></i> รายงานปัญหา <span class="nav-badge" id="nav-rpt-cnt" style="background:var(--red);display:none">0</span></div>
     </nav>
 
@@ -209,17 +208,6 @@
       <!-- DASHBOARD -->
       <div class="panel on" id="panel-dashboard">
         <div class="stats-grid" id="dash-stats"></div>
-        <div class="sec-head"><span class="sec-title">รออนุมัติล่าสุด</span></div>
-        <div id="dash-pending-preview"></div>
-      </div>
-
-      <!-- PENDING -->
-      <div class="panel" id="panel-pending">
-        <div class="sec-head">
-          <span class="sec-title">ร้านที่รอตรวจสอบ</span>
-          <span class="sec-count" id="pend-count"></span>
-        </div>
-        <div id="pending-list"></div>
       </div>
 
       <!-- ALL SHOPS -->
@@ -333,7 +321,7 @@
       <!-- POSTS -->
       <div class="panel" id="panel-posts">
         <div class="sec-head">
-          <span class="sec-title">โพสต์ชุมชน</span>
+          <span class="sec-title">กระดานข่าว</span>
           <span class="sec-count" id="posts-count"></span>
         </div>
         <div id="posts-list"></div>
@@ -529,10 +517,7 @@ function renderAll() {
   updateReportBadge();
 }
 
-function updateBadges() {
-  document.getElementById('nav-pend-cnt').textContent = pendingShops.length;
-  document.getElementById('nav-pend-cnt').style.display = pendingShops.length ? 'inline-block' : 'none';
-}
+function updateBadges() { /* pending removed */ }
 
 function updateReportBadge() {
   const cnt = reports.filter(r => !r.resolved).length;
@@ -544,15 +529,9 @@ function updateReportBadge() {
 function renderDashboard() {
   document.getElementById('dash-stats').innerHTML = `
     <div class="stat-card"><div class="stat-n">${shops.length}</div><div class="stat-l">ร้านทั้งหมด</div></div>
-    <div class="stat-card"><div class="stat-n warn">${pendingShops.length}</div><div class="stat-l">รออนุมัติ</div></div>
-    <div class="stat-card"><div class="stat-n">${posts.length}</div><div class="stat-l">โพสต์ชุมชน</div></div>
+    <div class="stat-card"><div class="stat-n">${posts.length}</div><div class="stat-l">กระดานข่าว</div></div>
     <div class="stat-card"><div class="stat-n">${shops.reduce((a,s)=>a+(s.reviews||0),0)}</div><div class="stat-l">รีวิวทั้งหมด</div></div>
     <div class="stat-card"><div class="stat-n" style="color:var(--red)">${reports.filter(r=>!r.resolved).length}</div><div class="stat-l">รายงานปัญหา</div></div>`;
-
-  const pend = pendingShops.slice(0, 3);
-  document.getElementById('dash-pending-preview').innerHTML = pend.length
-    ? pend.map(s => shopRowHtml(s, true)).join('')
-    : '<div class="empty-state"><i class="fa fa-check-circle"></i>ไม่มีร้านรออนุมัติ</div>';
 }
 
 // ── PENDING ──────────────────────────────────────────────

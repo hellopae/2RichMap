@@ -45,6 +45,7 @@
     }
     .hdr-btn-yellow{background:var(--green);color:#fff}
     .hdr-btn-ghost{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
+    .hdr-btn-red{background:var(--red-pale);color:var(--red);border:1.5px solid rgba(220,38,38,.15)}
     .hdr-btn:hover{opacity:.9;transform:translateY(-1px)}
 
     /* ── SEARCH + FILTERS ── */
@@ -513,12 +514,24 @@
     .btn-filter-open:hover{border-color:var(--green);color:var(--green)}
     .btn-filter-open.active{border-color:var(--green);color:var(--green);background:var(--green-pale)}
 
-    /* ── COMMUNITY BOARD ── */
-    #community-panel{
-      display:none;flex-direction:column;
-      width:100%;height:100%;background:var(--gray-50);overflow:hidden
+    /* ── SIDEBAR TABS ── */
+    .sb-tabs{display:flex;border-bottom:2px solid var(--gray-200);flex-shrink:0;background:var(--surface)}
+    .sb-tab{
+      flex:1;padding:11px 6px;border:none;background:transparent;font-family:var(--font);
+      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
+      border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
+      display:flex;align-items:center;justify-content:center;gap:5px
     }
-    #community-panel.on{display:flex}
+    .sb-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .sb-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+    .sb-panel.on{display:flex}
+    .public-notice{
+      font-size:11px;color:var(--gray-500);padding:7px 12px;
+      background:rgba(46,125,50,.05);border-bottom:1px solid var(--gray-200);
+      line-height:1.65;flex-shrink:0
+    }
+
+    /* ── COMMUNITY BOARD ── */
     .comm-head{
       background:var(--surface);border-bottom:1px solid var(--gray-200);
       padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0
@@ -644,8 +657,8 @@
     <button class="hdr-btn hdr-btn-yellow" onclick="openAddModal()">
       <i class="fa fa-plus"></i><span> เพิ่มร้าน</span>
     </button>
-    <button class="hdr-btn hdr-btn-ghost" id="btn-comm-hdr" onclick="toggleCommunity()">
-      <i class="fa fa-comments"></i><span> ชุมชน</span>
+    <button class="hdr-btn hdr-btn-red" onclick="openReportGeneral()">
+      <i class="fa fa-flag"></i><span> รายงาน</span>
     </button>
   </div>
 </header>
@@ -689,36 +702,53 @@
     </div>
   </div>
   <div id="sidebar">
-    <div class="sb-head">
-      <span class="sb-title">ร้านอาหารราคาถูก</span>
-      <span class="cnt-pill" id="cnt">12 ร้าน</span>
-    </div>
-    <div class="sort-row">
-      <span class="sort-lbl">เรียง:</span>
-      <button class="sort-btn on" onclick="setSort('default',this)">แนะนำ</button>
-      <button class="sort-btn" onclick="setSort('price',this)">ถูกสุด</button>
-      <button class="sort-btn" onclick="setSort('rating',this)">คะแนนสูงสุด</button>
-      <button class="sort-btn" onclick="setSort('distance',this)">ใกล้สุด</button>
-    </div>
-    <div id="shop-list"></div>
-  </div>
-
-  <!-- COMMUNITY PANEL (inside #app) -->
-  <div id="community-panel">
-    <div class="comm-head">
-      <span style="font-size:20px">💬</span>
-      <span class="comm-head-title">ชุมชนประหยัด</span>
-      <button class="new-post-btn" style="width:auto;padding:8px 14px;margin-bottom:0;font-size:13px" onclick="openNewPostModal()">
-        <i class="fa fa-pen"></i> โพสต์ใหม่
+    <!-- Tab switcher -->
+    <div class="sb-tabs">
+      <button class="sb-tab on" id="sbtab-shops" onclick="switchSbTab('shops',this)">
+        <i class="fa fa-utensils"></i> ร้านแนะนำ
+      </button>
+      <button class="sb-tab" id="sbtab-board" onclick="switchSbTab('board',this)">
+        <i class="fa fa-comments"></i> กระดานข่าว
       </button>
     </div>
-    <div class="comm-tabs">
-      <button class="comm-tab on" onclick="switchCommTab('hot',this)">🔥 ยอดนิยม</button>
-      <button class="comm-tab" onclick="switchCommTab('new',this)">🆕 ล่าสุด</button>
-      <button class="comm-tab" onclick="switchCommTab('tip',this)">💡 ทิปประหยัด</button>
-      <button class="comm-tab" onclick="switchCommTab('deal',this)">🏷️ ดีล</button>
+
+    <!-- ร้านแนะนำ panel -->
+    <div class="sb-panel on" id="sbpanel-shops">
+      <div class="public-notice">
+        <i class="fa fa-circle-info" style="color:var(--green)"></i>
+        เนื่องจากเปิดสาธารณะ ทุกคนสามารถเพิ่มร้านได้เอง ถ้าเจอข้อมูลไม่ถูกต้องกด <strong>🚩 รายงาน</strong> ในหน้ารายละเอียดร้าน หรือปุ่ม <strong>รายงาน</strong> ด้านบนได้ครับ
+      </div>
+      <div class="sb-head">
+        <span class="sb-title">ร้านอาหารราคาถูก</span>
+        <span class="cnt-pill" id="cnt">0 ร้าน</span>
+      </div>
+      <div class="sort-row">
+        <span class="sort-lbl">เรียง:</span>
+        <button class="sort-btn on" onclick="setSort('default',this)">แนะนำ</button>
+        <button class="sort-btn" onclick="setSort('price',this)">ถูกสุด</button>
+        <button class="sort-btn" onclick="setSort('rating',this)">คะแนนสูงสุด</button>
+        <button class="sort-btn" onclick="setSort('distance',this)">ใกล้สุด</button>
+      </div>
+      <div id="shop-list"></div>
     </div>
-    <div class="comm-list" id="comm-list"></div>
+
+    <!-- กระดานข่าว panel -->
+    <div class="sb-panel" id="sbpanel-board">
+      <div class="comm-head">
+        <span style="font-size:18px">📋</span>
+        <span class="comm-head-title">กระดานข่าว</span>
+        <button class="new-post-btn" style="width:auto;padding:7px 12px;margin-bottom:0;font-size:12px" onclick="openNewPostModal()">
+          <i class="fa fa-pen"></i> โพสต์ใหม่
+        </button>
+      </div>
+      <div class="comm-tabs">
+        <button class="comm-tab on" onclick="switchCommTab('hot',this)">🔥 ยอดนิยม</button>
+        <button class="comm-tab" onclick="switchCommTab('new',this)">🆕 ล่าสุด</button>
+        <button class="comm-tab" onclick="switchCommTab('tip',this)">💡 ทิปประหยัด</button>
+        <button class="comm-tab" onclick="switchCommTab('deal',this)">🏷️ ดีล</button>
+      </div>
+      <div class="comm-list" id="comm-list"></div>
+    </div>
   </div>
 </div>
 
@@ -726,9 +756,9 @@
 <div id="mobile-nav">
   <div class="mnav">
     <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
-    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>รายการ</span></button>
+    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>ร้านแนะนำ</span></button>
     <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
-    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>ชุมชน</span></button>
+    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>กระดานข่าว</span></button>
   </div>
 </div>
 
@@ -2256,6 +2286,12 @@ function shareShop(id){
     :navigator.clipboard.writeText(t).then(()=>showToast('คัดลอกแล้ว! 📋'));
 }
 let _reportingShopId=null;
+function openReportGeneral(){
+  _reportingShopId=null;
+  document.getElementById('rpt-shop-name').textContent='(ระบุชื่อร้านในคำอธิบาย)';
+  document.getElementById('rpt-msg').value='';
+  openModal('report-modal');
+}
 function flagShop(id){
   const s=shops.find(x=>x.id===id)||shops.find(x=>String(x.id)===String(id));
   if(!s) return;
@@ -2267,14 +2303,13 @@ function flagShop(id){
 function submitReport(){
   const msg=document.getElementById('rpt-msg').value.trim();
   if(!msg){showToast('กรุณาระบุปัญหาก่อนครับ');return;}
-  const s=shops.find(x=>String(x.id)===String(_reportingShopId));
-  if(!s) return;
-  s.reportCount=(s.reportCount||0)+1;
+  const s=_reportingShopId?shops.find(x=>String(x.id)===String(_reportingShopId)):null;
+  if(s) s.reportCount=(s.reportCount||0)+1;
   reports.push({
     id:Date.now(),
-    shopId:String(_reportingShopId),
-    shopName:s.name,
-    shopCat:s.cat,
+    shopId:s?String(_reportingShopId):'',
+    shopName:s?s.name:'(ทั่วไป)',
+    shopCat:s?s.cat:'',
     message:msg,
     submittedAt:new Date().toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
     resolved:false
@@ -2793,29 +2828,31 @@ function submitPost(){
 }
 
 // ── MOBILE ───────────────────────────────────────────────
+function switchSbTab(tab, btn){
+  document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.sb-panel').forEach(p=>p.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  else document.getElementById('sbtab-'+tab)?.classList.add('on');
+  document.getElementById('sbpanel-'+tab)?.classList.add('on');
+  if(tab==='board') renderComm();
+}
 function switchTab(t){
   const isMob=window.innerWidth<=767;
-  // nav buttons
   document.getElementById('mnav-map')?.classList.toggle('on',t==='map');
   document.getElementById('mnav-list')?.classList.toggle('on',t==='list');
   document.getElementById('mnav-comm')?.classList.toggle('on',t==='community');
   const mw=document.getElementById('map-wrap');
   const sb=document.getElementById('sidebar');
-  const cp=document.getElementById('community-panel');
   if(isMob){
     mw.classList.toggle('mob-off',t!=='map');
-    sb.classList.toggle('mob-on',t==='list');
-    sb.classList.toggle('mob-on',t==='list');
-    cp.style.display=t==='community'?'flex':'none';
-    if(t==='community'){cp.style.position='absolute';cp.style.inset='0';cp.style.zIndex='10';}
+    sb.classList.toggle('mob-on',t==='list'||t==='community');
+    if(t==='community') switchSbTab('board', document.getElementById('sbtab-board'));
+    else if(t==='list') switchSbTab('shops', document.getElementById('sbtab-shops'));
   } else {
-    // Desktop: community replaces sidebar
-    sb.style.display=t==='community'?'none':'flex';
-    cp.style.display=t==='community'?'flex':'none';
-    if(t==='community'){cp.style.width='380px';cp.style.flexShrink='0';}
+    if(t==='community') switchSbTab('board', document.getElementById('sbtab-board'));
+    else if(t==='list') switchSbTab('shops', document.getElementById('sbtab-shops'));
   }
   if(t==='map'&&map) setTimeout(()=>map.invalidateSize(),100);
-  if(t==='community') renderComm();
 }
 
 // ── TOAST ────────────────────────────────────────────────
