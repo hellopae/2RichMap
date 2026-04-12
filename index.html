@@ -2444,8 +2444,6 @@ function submitShop(){
   document.getElementById('add-form').style.display='none';
   document.getElementById('add-success').style.display='block';
   saveShops();
-  renderCards();
-  if(map) renderMarkers();
 }
 
 // ── MODAL HELPERS ────────────────────────────────────────
@@ -3139,10 +3137,24 @@ function adminEditSave(){
 }
 
 // ── FIREBASE REALTIME DATABASE ───────────────────────────
+function normalizeShop(s){
+  if(!s) return null;
+  return {
+    ...s,
+    menus: s.menus ? (Array.isArray(s.menus) ? s.menus : Object.values(s.menus)) : [],
+    reviewList: s.reviewList ? (Array.isArray(s.reviewList) ? s.reviewList : Object.values(s.reviewList)) : [],
+    reportCount: s.reportCount||0, reviews: s.reviews||0,
+    rating: s.rating||0, value: s.value||0,
+    desc: s.desc||'', wongnai: s.wongnai||'',
+    hours: s.hours||'', parking: s.parking||'no'
+  };
+}
+
 function initFirebase() {
   db.ref('shops').on('value', snap => {
     const val = snap.val();
-    shops = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    const raw = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+    shops = raw.filter(Boolean).map(normalizeShop).filter(Boolean);
     renderCards();
     if (map) {
       shops.filter(s => s.status === 'approved' && !markers[s.id]).forEach(addMarker);
