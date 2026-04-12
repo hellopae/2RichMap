@@ -214,9 +214,11 @@
     .overlay.open .modal{transform:translateY(0)}
     .modal-handle{width:36px;height:4px;background:var(--gray-200);border-radius:2px;margin:0 auto 14px}
     .modal-close{
-      position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
-      background:var(--surface3);border:none;cursor:pointer;font-size:14px;
-      color:var(--gray-700);display:flex;align-items:center;justify-content:center
+      position:sticky;top:0;float:right;margin-right:-4px;margin-bottom:-34px;
+      width:34px;height:34px;border-radius:50%;z-index:10;
+      background:var(--surface3);border:none;cursor:pointer;font-size:15px;
+      color:var(--gray-700);display:flex;align-items:center;justify-content:center;
+      box-shadow:0 1px 4px rgba(0,0,0,.12)
     }
     .modal-close:hover{background:var(--gray-300)}
     @media(min-width:768px){
@@ -770,7 +772,7 @@
 </div>
 
 <!-- ADD MODAL -->
-<div class="overlay" id="add-modal" onclick="closeOnBg(event,'add-modal')">
+<div class="overlay" id="add-modal">
   <div class="modal">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="closeModal('add-modal')"><i class="fa fa-times"></i></button>
