@@ -520,7 +520,7 @@
       flex:1;padding:11px 6px;border:none;background:transparent;font-family:var(--font);
       font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
       border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
-      white-space:nowrap;text-align:center;overflow:visible
+      text-align:center;min-width:0
     }
     .sb-tab.on{color:var(--green);border-bottom-color:var(--green)}
     .sb-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
@@ -755,8 +755,8 @@
   <div class="mnav">
     <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
     <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
-    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>ร้านแนะนำ</span></button>
-    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>กระดานข่าว</span></button>
+    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>แนะนำ</span></button>
+    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>กระดาน</span></button>
   </div>
 </div>
 
