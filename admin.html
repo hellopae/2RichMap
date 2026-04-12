@@ -163,6 +163,8 @@
       .shop-thumb{display:none}
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -434,9 +436,21 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── FIREBASE ─────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAV6uKkVi2jFIoo-37Ei0l0ZCXgH-oirbw",
+  authDomain: "richmap-eb39a.firebaseapp.com",
+  databaseURL: "https://richmap-eb39a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "richmap-eb39a",
+  storageBucket: "richmap-eb39a.firebasestorage.app",
+  messagingSenderId: "841092682932",
+  appId: "1:841092682932:web:da57786848f3cde2e833e1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ── CONFIG ──────────────────────────────────────────────
 const PW = '2rich';
-const LS_SHOPS = '2rm_shops', LS_PENDING = '2rm_pending', LS_POSTS = '2rm_posts', LS_REPORTS = '2rm_reports';
 const CAT = {
   street:     {label:'Street Food', color:'#FF7043', icon:'🍢'},
   restaurant: {label:'ร้านอาหาร',   color:'#58A6FF', icon:'🍜'},
@@ -454,12 +468,12 @@ let addMenus = [];
 let addVal = 0;
 
 // ── AUTH ─────────────────────────────────────────────────
-function checkPw() {
+async function checkPw() {
   const v = document.getElementById('pw-input').value;
   if (v === PW) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'block';
-    loadData();
+    await loadData();
     renderAll();
     setTimeout(initAddMap, 400);
   } else {
@@ -477,22 +491,26 @@ document.getElementById('pw-input').addEventListener('keydown', e => {
 
 // ── DATA ─────────────────────────────────────────────────
 function loadData() {
-  try {
-    const s = localStorage.getItem(LS_SHOPS);
-    const p = localStorage.getItem(LS_PENDING);
-    const po = localStorage.getItem(LS_POSTS);
-    shops = s ? JSON.parse(s) : [];
-    pendingShops = p ? JSON.parse(p) : [];
-    posts = po ? JSON.parse(po) : [];
-    const rp = localStorage.getItem(LS_REPORTS);
-    reports = rp ? JSON.parse(rp) : [];
-  } catch(e) { shops = []; pendingShops = []; posts = []; reports = []; }
+  return new Promise(resolve => {
+    Promise.all([
+      db.ref('shops').once('value'),
+      db.ref('posts').once('value'),
+      db.ref('reports').once('value')
+    ]).then(([shopsSnap, postsSnap, reportsSnap]) => {
+      const sv = shopsSnap.val();
+      shops = sv ? (Array.isArray(sv) ? sv.filter(Boolean) : Object.values(sv).filter(Boolean)) : [];
+      const pv = postsSnap.val();
+      posts = pv ? (Array.isArray(pv) ? pv.filter(Boolean) : Object.values(pv).filter(Boolean)) : [];
+      const rv = reportsSnap.val();
+      reports = rv ? (Array.isArray(rv) ? rv.filter(Boolean) : Object.values(rv).filter(Boolean)) : [];
+      resolve();
+    });
+  });
 }
 function saveData() {
-  localStorage.setItem(LS_SHOPS, JSON.stringify(shops));
-  localStorage.setItem(LS_PENDING, JSON.stringify(pendingShops));
-  localStorage.setItem(LS_POSTS, JSON.stringify(posts));
-  localStorage.setItem(LS_REPORTS, JSON.stringify(reports));
+  db.ref('shops').set(shops);
+  db.ref('posts').set(posts);
+  db.ref('reports').set(reports);
 }
 
 // ── NAVIGATION ───────────────────────────────────────────
@@ -561,9 +579,9 @@ function shopRowHtml(s, isPending = false) {
   </div>`;
 }
 
-function approve(id) {
+async function approve(id) {
   id = String(id);
-  loadData(); // อ่านข้อมูลสดจาก localStorage เสมอ
+  await loadData();
   const i = pendingShops.findIndex(s => String(s.id) === id);
   if (i < 0) { showToast('❌ ไม่พบร้านในคิว (id=' + id + ')'); return; }
   const s = {...pendingShops[i], status: 'approved'};
@@ -573,9 +591,9 @@ function approve(id) {
   renderDashboard(); renderPending(); renderShopsList(); updateBadges();
   showToast(`✅ อนุมัติ "${s.name}" แล้ว`);
 }
-function reject(id) {
+async function reject(id) {
   id = String(id);
-  loadData(); // อ่านข้อมูลสดจาก localStorage เสมอ
+  await loadData();
   const i = pendingShops.findIndex(s => String(s.id) === id);
   if (i < 0) { showToast('❌ ไม่พบร้านในคิว (id=' + id + ')'); return; }
   const n = pendingShops[i].name;
@@ -595,9 +613,9 @@ function renderShopsList() {
     : '<div class="empty-state"><i class="fa fa-store"></i>ไม่พบร้านที่ค้นหา</div>';
 }
 
-function delShop(id) {
+async function delShop(id) {
   id = String(id);
-  loadData();
+  await loadData();
   const s = shops.find(x => String(x.id) === id); if (!s) return;
   if (!confirm(`ลบ "${s.name}" ?`)) return;
   shops = shops.filter(x => String(x.id) !== id);
@@ -606,9 +624,9 @@ function delShop(id) {
 }
 
 // ── EDIT SHOP ────────────────────────────────────────────
-function openEdit(id) {
+async function openEdit(id) {
   id = String(id);
-  loadData();
+  await loadData();
   const s = shops.find(x => String(x.id) === id); if (!s) return;
   editingId = id;
   document.getElementById('edit-modal-title').textContent = `✏️ ${s.name}`;
@@ -947,9 +965,9 @@ function renderReports() {
     : '<div class="empty-state"><i class="fa fa-flag"></i>ไม่มีรายงานปัญหา ✅</div>';
 }
 
-function resolveReport(id) {
+async function resolveReport(id) {
   id = String(id);
-  loadData();
+  await loadData();
   const r = reports.find(x => String(x.id) === id); if (!r) return;
   r.resolved = true;
   saveData();
@@ -957,9 +975,9 @@ function resolveReport(id) {
   showToast('✅ ทำเครื่องหมายแก้ไขแล้ว');
 }
 
-function deleteReport(id) {
+async function deleteReport(id) {
   id = String(id);
-  loadData();
+  await loadData();
   reports = reports.filter(x => String(x.id) !== id);
   saveData();
   renderReports(); updateReportBadge();

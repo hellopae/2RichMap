@@ -646,6 +646,8 @@
     .ae-menu-thumb{width:52px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
     .ae-rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px}
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -1150,8 +1152,21 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+// ── FIREBASE ─────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAV6uKkVi2jFIoo-37Ei0l0ZCXgH-oirbw",
+  authDomain: "richmap-eb39a.firebaseapp.com",
+  databaseURL: "https://richmap-eb39a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "richmap-eb39a",
+  storageBucket: "richmap-eb39a.firebasestorage.app",
+  messagingSenderId: "841092682932",
+  appId: "1:841092682932:web:da57786848f3cde2e833e1"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ── DATA ────────────────────────────────────────────────
-// Shops and posts are persisted in localStorage.
+// Shops and posts are persisted in Firebase Realtime Database.
 // Use admin.html to add/edit shops.
 let shops = [];
 
@@ -3123,45 +3138,42 @@ function adminEditSave(){
   showToast(`บันทึก "${s.name}" เรียบร้อย ✅`);
 }
 
-// ── LOCALSTORAGE ─────────────────────────────────────────
-const LS_SHOPS='2rm_shops', LS_PENDING='2rm_pending', LS_POSTS='2rm_posts', LS_REPORTS='2rm_reports';
-
-function loadData(){
-  try{
-    const s=localStorage.getItem(LS_SHOPS);
-    const p=localStorage.getItem(LS_PENDING);
-    const po=localStorage.getItem(LS_POSTS);
-    if(s) shops.push(...JSON.parse(s));
-    if(p) pendingShops.push(...JSON.parse(p));
-    if(po) posts.push(...JSON.parse(po));
-    const rp=localStorage.getItem(LS_REPORTS);
-    if(rp) reports.push(...JSON.parse(rp));
-  }catch(e){console.warn('loadData error',e);}
+// ── FIREBASE REALTIME DATABASE ───────────────────────────
+function initFirebase() {
+  db.ref('shops').on('value', snap => {
+    const val = snap.val();
+    shops = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    renderCards();
+    if (map) syncMarkers();
+  });
+  db.ref('posts').on('value', snap => {
+    const val = snap.val();
+    posts = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    renderComm();
+  });
+  db.ref('reports').on('value', snap => {
+    const val = snap.val();
+    reports = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+  });
 }
 
 function saveShops(){
-  try{
-    localStorage.setItem(LS_SHOPS, JSON.stringify(shops));
-    localStorage.setItem(LS_PENDING, JSON.stringify(pendingShops));
-  }catch(e){console.warn('saveShops error',e);}
+  db.ref('shops').set(shops);
 }
 
 function savePosts(){
-  try{
-    localStorage.setItem(LS_POSTS, JSON.stringify(posts));
-  }catch(e){console.warn('savePosts error',e);}
+  db.ref('posts').set(posts);
 }
+
 function saveReports(){
-  try{
-    localStorage.setItem(LS_REPORTS,JSON.stringify(reports));
-  }catch(e){console.warn('saveReports error',e);}
+  db.ref('reports').set(reports);
 }
 
 // ── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  loadData();
   initMap(); renderCards(); updateRange();
   if(window.innerWidth<=767) switchTab('map');
+  initFirebase();
 });
 </script>
 
