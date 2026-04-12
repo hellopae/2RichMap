@@ -3144,7 +3144,10 @@ function initFirebase() {
     const val = snap.val();
     shops = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
     renderCards();
-    if (map) syncMarkers();
+    if (map) {
+      shops.filter(s => s.status === 'approved' && !markers[s.id]).forEach(addMarker);
+      syncMarkers();
+    }
   });
   db.ref('posts').on('value', snap => {
     const val = snap.val();
