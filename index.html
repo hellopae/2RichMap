@@ -3163,7 +3163,12 @@ function initFirebase() {
   });
   db.ref('posts').on('value', snap => {
     const val = snap.val();
-    posts = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    const rawP = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+    posts = rawP.filter(Boolean).map(p => p ? ({
+      ...p,
+      comments: p.comments ? (Array.isArray(p.comments) ? p.comments : Object.values(p.comments)) : [],
+      votes: p.votes||0, voted: p.voted||false
+    }) : null).filter(Boolean);
     renderComm();
   });
   db.ref('reports').on('value', snap => {

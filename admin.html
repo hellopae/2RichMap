@@ -156,8 +156,14 @@
     .pill-ok{background:var(--green-pale);color:var(--green)}
     .pill-wait{background:rgba(227,179,65,.15);color:var(--yellow-dark)}
 
+    /* ── MOBILE NAV ── */
+    .mob-menu-btn{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--gray-200);border-radius:8px;background:var(--surface3);cursor:pointer;color:var(--gray-700);font-size:16px;flex-shrink:0}
+    .nav-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300}
+    .nav-overlay.on{display:block}
     @media(max-width:767px){
-      .adm-nav{display:none}
+      .mob-menu-btn{display:flex}
+      .adm-nav{display:none;position:fixed;top:56px;left:0;bottom:0;z-index:400;width:240px;box-shadow:4px 0 20px rgba(0,0,0,.4)}
+      .adm-nav.mob-open{display:block}
       .adm-content{padding:16px}
       .form-row{grid-template-columns:1fr}
       .shop-thumb{display:none}
@@ -183,6 +189,7 @@
 <!-- APP -->
 <div id="app-screen">
   <header class="adm-header">
+    <button class="mob-menu-btn" onclick="toggleMobNav()"><i class="fa fa-bars"></i></button>
     <span style="font-size:20px">🛡️</span>
     <span class="adm-logo">2RichMap</span>
     <span class="adm-logo-sub">Admin Panel</span>
@@ -192,9 +199,11 @@
     </div>
   </header>
 
+  <div class="nav-overlay" id="nav-overlay" onclick="closeMobNav()"></div>
+
   <div class="adm-body">
     <!-- SIDEBAR NAV -->
-    <nav class="adm-nav">
+    <nav class="adm-nav" id="adm-nav">
       <div class="nav-item on" onclick="showPanel('dashboard',this)"><i class="fa fa-gauge" style="width:16px"></i> ภาพรวม</div>
       <div class="nav-item" onclick="showPanel('shops',this)"><i class="fa fa-store" style="width:16px"></i> ร้านทั้งหมด</div>
       <div class="nav-sep"></div>
@@ -485,6 +494,17 @@ function logout() {
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-screen').style.display = 'none';
 }
+
+function toggleMobNav() {
+  const nav = document.getElementById('adm-nav');
+  const overlay = document.getElementById('nav-overlay');
+  const open = nav.classList.toggle('mob-open');
+  overlay.classList.toggle('on', open);
+}
+function closeMobNav() {
+  document.getElementById('adm-nav').classList.remove('mob-open');
+  document.getElementById('nav-overlay').classList.remove('on');
+}
 document.getElementById('pw-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') checkPw();
 });
@@ -519,6 +539,7 @@ function showPanel(id, el) {
   document.getElementById(`panel-${id}`).classList.add('on');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
   if (el) el.classList.add('on');
+  closeMobNav();
   // Render on demand
   if (id === 'dashboard') renderDashboard();
   if (id === 'pending') renderPending();
