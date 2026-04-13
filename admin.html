@@ -477,23 +477,30 @@ let addMenus = [];
 let addVal = 0;
 
 // ── AUTH ─────────────────────────────────────────────────
+async function enterAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  await loadData();
+  renderAll();
+  setTimeout(initAddMap, 400);
+}
 async function checkPw() {
   const v = document.getElementById('pw-input').value;
   if (v === PW) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    await loadData();
-    renderAll();
-    setTimeout(initAddMap, 400);
+    sessionStorage.setItem('2rm_admin', '1');
+    await enterAdmin();
   } else {
     document.getElementById('pw-err').style.display = 'block';
     document.getElementById('pw-input').value = '';
   }
 }
 function logout() {
+  sessionStorage.removeItem('2rm_admin');
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app-screen').style.display = 'none';
 }
+// Auto-login if session still active
+if (sessionStorage.getItem('2rm_admin') === '1') enterAdmin();
 
 function toggleMobNav() {
   const nav = document.getElementById('adm-nav');
@@ -520,7 +527,12 @@ function loadData() {
       const sv = shopsSnap.val();
       shops = sv ? (Array.isArray(sv) ? sv.filter(Boolean) : Object.values(sv).filter(Boolean)) : [];
       const pv = postsSnap.val();
-      posts = pv ? (Array.isArray(pv) ? pv.filter(Boolean) : Object.values(pv).filter(Boolean)) : [];
+      const rawP = pv ? (Array.isArray(pv) ? pv : Object.values(pv)) : [];
+      posts = rawP.filter(Boolean).map(p => ({
+        ...p,
+        comments: p.comments ? (Array.isArray(p.comments) ? p.comments : Object.values(p.comments)) : [],
+        votes: p.votes||0
+      }));
       const rv = reportsSnap.val();
       reports = rv ? (Array.isArray(rv) ? rv.filter(Boolean) : Object.values(rv).filter(Boolean)) : [];
       resolve();
