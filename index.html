@@ -2253,16 +2253,6 @@ function openDet(id){
       <div class="menu-name">${m.name}</div>
     </div>`).join('')}</div></div>`:'';
   const valPct=(s.value||0)/5*100;
-  const _revEntries=Object.entries(reviews[s.id]||{});
-  const revCount=_revEntries.length;
-  const revs=_revEntries.map(([key,r])=>`<div class="rev-item">
-    <div class="rev-top">
-      <span class="rev-name">${r.name}</span>
-      <div class="rev-stars">${'<i class="fa fa-star"></i>'.repeat(r.stars||0)}${'<i class="fa fa-star" style="color:var(--gray-200)"></i>'.repeat(5-(r.stars||0))}</div>
-    </div>
-    <div class="rev-text">${r.text}</div>
-    <div class="rev-date">${r.date} · <a href="#" onclick="flagRev('${s.id}','${key}');return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
-  </div>`).join('');
   const wonBtn=s.wongnai?`<div class="sec"><a class="btn-wongnai" href="${s.wongnai}" target="_blank"><i class="fa fa-magnifying-glass"></i> ดูเพิ่มเติมบน Wongnai</a></div>`:'';
   // Build all images for gallery: cover + menu images
   const allImgs=[{src:s.cover,caption:s.name},...s.menus.filter(m=>m.img).map(m=>({src:m.img,caption:m.name}))];
@@ -2302,20 +2292,10 @@ function openDet(id){
     <div class="sec"><div class="sec-t">ข้อมูลเพิ่มเติม</div>
       <div class="info-grid">
         <div class="info-box"><div class="info-lbl">ที่จอดรถ</div><div class="info-val">${PARKING[s.parking]||'-'}</div></div>
-        <div class="info-box"><div class="info-lbl">รีวิวทั้งหมด</div><div class="info-val">${revCount} รีวิว</div></div>
+        <div class="info-box"><div class="info-lbl">รีวิวทั้งหมด</div><div class="info-val">${s.reviews||0} รีวิว</div></div>
       </div>
     </div>
     ${wonBtn}
-    <div class="sec"><div class="sec-t">รีวิวจากผู้ใช้</div>
-      ${revs}
-      <div class="rev-form">
-        <div class="rev-form-t">✍️ เขียนรีวิวของคุณ</div>
-        <div class="star-pick" id="sp-${id}">${[1,2,3,4,5].map(n=>`<i class="fa fa-star" data-v="${n}" onclick="pickStar(${id},${n})"></i>`).join('')}</div>
-        <input type="text" class="form-inp" id="rn-${id}" placeholder="ชื่อของคุณ" style="margin-bottom:7px">
-        <textarea class="form-ta" id="rt-${id}" placeholder="บอกเพื่อนๆ ว่าคุ้มแค่ไหน..." style="min-height:55px"></textarea>
-        <button class="btn-submit" style="padding:10px;font-size:14px;margin-top:7px" onclick="subRev(${id})">ส่งรีวิว</button>
-      </div>
-    </div>
     <div class="det-actions">
       <button class="act-btn act-gray" onclick="shareShop(${id})"><i class="fa fa-share-nodes"></i> แชร์</button>
       <button class="act-btn act-red" onclick="flagShop(${id})"><i class="fa fa-flag"></i> รายงาน</button>
@@ -2414,18 +2394,16 @@ function submitReport(){
   const msg=document.getElementById('rpt-msg').value.trim();
   if(!msg){showToast('กรุณาระบุปัญหาก่อนครับ');return;}
   const s=_reportingShopId?shops.find(x=>String(x.id)===String(_reportingShopId)):null;
-  if(s) s.reportCount=(s.reportCount||0)+1;
-  reports.push({
-    id:Date.now(),
-    shopId:s?String(_reportingShopId):'',
-    shopName:s?s.name:'(ทั่วไป)',
-    shopCat:s?s.cat:'',
-    message:msg,
-    submittedAt:new Date().toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
-    resolved:false
+  // ใช้ push() — ไม่ทับข้อมูลเดิม บันทึกทันที
+  db.ref('reports').push({
+    id: Date.now(),
+    shopId: s ? String(_reportingShopId) : '',
+    shopName: s ? s.name : '(ทั่วไป)',
+    shopCat: s ? s.cat : '',
+    message: msg,
+    submittedAt: new Date().toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    resolved: false
   });
-  saveShops();
-  saveReports();
   closeModal('report-modal');
   showToast('รายงานแล้ว ขอบคุณที่ช่วยตรวจสอบ 🙏');
 }

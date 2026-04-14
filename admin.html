@@ -497,6 +497,15 @@ async function enterAdmin() {
   await loadData();
   renderAll();
   setTimeout(initAddMap, 400);
+  // Real-time listener สำหรับ reports — อัปเดตทันทีไม่ต้อง refresh
+  db.ref('reports').on('value', snap => {
+    const val = snap.val();
+    reports = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    updateReportBadge();
+    // Re-render ถ้า panel reports เปิดอยู่
+    const panel = document.getElementById('panel-reports');
+    if (panel && panel.classList.contains('on')) renderReports();
+  });
 }
 async function checkPw() {
   const v = document.getElementById('pw-input').value;
