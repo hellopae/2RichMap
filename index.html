@@ -591,6 +591,21 @@
     .vote-btn.voted{border-color:var(--orange,#FB8C00);background:#FFF3E0;color:#E65100}
     .comment-count{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:3px;margin-left:auto}
 
+    /* Share modal */
+    .share-btn{
+      display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;
+      font-family:var(--font);font-size:14px;font-weight:600;text-decoration:none;
+      border:none;cursor:pointer;width:100%;transition:opacity .15s
+    }
+    .share-btn:hover{opacity:.85}
+    .share-btn i{font-size:18px;width:22px;text-align:center}
+    .share-fb{background:#1877F2;color:#fff}
+    .share-tw{background:#000;color:#fff}
+    .share-line{background:#06C755;color:#fff}
+    .share-ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
+    .share-mail{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
+    .share-copy{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
+
     /* Post detail overlay */
     #post-modal .modal{max-width:600px}
     .post-detail-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
@@ -2316,11 +2331,36 @@ function flagRev(sid,idx){
 }
 
 // ── SHARE / FLAG ────────────────────────────────────────
+let _shareText='', _shareUrl='';
 function shareShop(id){
-  const s=shops.find(x=>x.id===id);
-  const t=`[2RichMap] ${s.name} — ${s.priceMin}-${s.priceMax}฿ ที่ ${s.location}`;
-  navigator.share?navigator.share({title:s.name,text:t,url:location.href})
-    :navigator.clipboard.writeText(t).then(()=>showToast('คัดลอกแล้ว! 📋'));
+  const s=shops.find(x=>x.id===id); if(!s) return;
+  _shareUrl='https://2richmap.com';
+  _shareText=`🍜 ${s.name} — ${s.priceMin}-${s.priceMax}฿ ที่ ${s.location}\n\nดูได้ที่ 2richmap.com`;
+  const enc=encodeURIComponent;
+  document.getElementById('share-modal-body').innerHTML=`
+    <div style="font-size:15px;font-weight:800;margin-bottom:4px">${s.name}</div>
+    <div style="font-size:12px;color:var(--gray-500);margin-bottom:18px">${s.location} · ${s.priceMin}-${s.priceMax}฿</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <a class="share-btn share-fb" href="https://www.facebook.com/sharer/sharer.php?u=${enc(_shareUrl)}&quote=${enc(_shareText)}" target="_blank" onclick="closeModal('share-modal')">
+        <i class="fa-brands fa-facebook"></i> แชร์ไป Facebook
+      </a>
+      <a class="share-btn share-tw" href="https://twitter.com/intent/tweet?text=${enc(_shareText)}" target="_blank" onclick="closeModal('share-modal')">
+        <i class="fa-brands fa-x-twitter"></i> แชร์ไป X (Twitter)
+      </a>
+      <a class="share-btn share-line" href="https://line.me/R/msg/text/?${enc(_shareText)}" target="_blank" onclick="closeModal('share-modal')">
+        <i class="fa-brands fa-line"></i> แชร์ไป LINE
+      </a>
+      <button class="share-btn share-ig" onclick="navigator.clipboard.writeText(_shareText).then(()=>{showToast('คัดลอกแล้ว! วางบน IG ได้เลย 📋');closeModal('share-modal')})">
+        <i class="fa-brands fa-instagram"></i> คัดลอกสำหรับ Instagram
+      </button>
+      <a class="share-btn share-mail" href="mailto:?subject=${enc('แนะนำร้าน: '+s.name)}&body=${enc(_shareText)}" onclick="closeModal('share-modal')">
+        <i class="fa fa-envelope"></i> ส่งอีเมล
+      </a>
+      <button class="share-btn share-copy" onclick="navigator.clipboard.writeText(_shareUrl).then(()=>{showToast('คัดลอก link แล้ว! 📋');closeModal('share-modal')})">
+        <i class="fa fa-link"></i> คัดลอก Link
+      </button>
+    </div>`;
+  openModal('share-modal');
 }
 let _reportingShopId=null;
 function openReportGeneral(){
@@ -2954,9 +2994,15 @@ async function searchAddress(){
   btn.innerHTML='<i class="fa fa-spinner fa-spin"></i>';
   btn.disabled=true;
   try{
-    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' ประเทศไทย')}&format=json&limit=1&accept-language=th`;
-    const res=await fetch(url,{headers:{'Accept-Language':'th'}});
-    const data=await res.json();
+    // ลอง query หลายแบบ เพื่อให้หาสถานที่ไทยได้ดีขึ้น
+    const queries=[q+' กรุงเทพมหานคร', q+' ไทย', q];
+    let data=[];
+    for(const query of queries){
+      const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=3&countrycodes=th&accept-language=th`;
+      const res=await fetch(url,{headers:{'Accept-Language':'th'}});
+      data=await res.json();
+      if(data.length>0) break;
+    }
     if(data.length>0){
       const{lat,lon,display_name}=data[0];
       pinLat=parseFloat(lat); pinLng=parseFloat(lon);
@@ -3216,6 +3262,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   initFirebase();
 });
 </script>
+
+<!-- SHARE MODAL -->
+<div class="overlay" id="share-modal" onclick="closeOnBg(event,'share-modal')">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('share-modal')"><i class="fa fa-times"></i></button>
+    <div style="font-size:16px;font-weight:800;margin-bottom:14px">📤 แชร์ร้านนี้</div>
+    <div id="share-modal-body"></div>
+  </div>
+</div>
 
 <!-- REPORT MODAL -->
 <div class="overlay" id="report-modal" onclick="closeOnBg(event,'report-modal')">
