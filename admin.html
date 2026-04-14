@@ -486,6 +486,8 @@ const PARKING = {yes:'✅ มีที่จอด', no:'❌ ไม่มี', n
 let shops = [], pendingShops = [], posts = [], reports = [];
 let reviews = {}; // {shopId: {fbKey: {name,stars,text,date}}}
 let shopFbKeys = {}; // {shopId: firebaseKey} — ใช้ update/delete เฉพาะร้าน
+let reportFbKeys = {}; // {reportId: firebaseKey} — ใช้ delete เฉพาะ report
+let postFbKeys = {}; // {postId: firebaseKey} — ใช้ update/delete เฉพาะโพสต์
 let editingId = null;
 let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
 let addMenus = [];
@@ -501,7 +503,11 @@ async function enterAdmin() {
   // Real-time listener สำหรับ reports — อัปเดตทันทีไม่ต้อง refresh
   db.ref('reports').on('value', snap => {
     const val = snap.val();
-    reports = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+    reports = []; reportFbKeys = {};
+    if (val) {
+      const entries = Array.isArray(val) ? val.map((r,i)=>[String(i),r]) : Object.entries(val);
+      entries.forEach(([key, r]) => { if (r) { reports.push(r); if (r.id) reportFbKeys[String(r.id)] = key; } });
+    }
     updateReportBadge();
     // Re-render ถ้า panel reports เปิดอยู่
     const panel = document.getElementById('panel-reports');
@@ -560,14 +566,23 @@ function loadData() {
         });
       }
       const pv = postsSnap.val();
-      const rawP = pv ? (Array.isArray(pv) ? pv : Object.values(pv)) : [];
-      posts = rawP.filter(Boolean).map(p => ({
-        ...p,
-        comments: p.comments ? (Array.isArray(p.comments) ? p.comments : Object.values(p.comments)) : [],
-        votes: p.votes||0
-      }));
+      posts = []; postFbKeys = {};
+      if (pv) {
+        const pEntries = Array.isArray(pv) ? pv.map((p,i)=>[String(i),p]) : Object.entries(pv);
+        pEntries.forEach(([key, p]) => {
+          if (p) {
+            const post = { ...p, comments: p.comments ? (Array.isArray(p.comments) ? p.comments : Object.values(p.comments)) : [], votes: p.votes||0 };
+            posts.push(post);
+            if (p.id) postFbKeys[String(p.id)] = key;
+          }
+        });
+      }
       const rv = reportsSnap.val();
-      reports = rv ? (Array.isArray(rv) ? rv.filter(Boolean) : Object.values(rv).filter(Boolean)) : [];
+      reports = []; reportFbKeys = {};
+      if (rv) {
+        const rEntries = Array.isArray(rv) ? rv.map((r,i)=>[String(i),r]) : Object.entries(rv);
+        rEntries.forEach(([key, r]) => { if (r) { reports.push(r); if (r.id) reportFbKeys[String(r.id)] = key; } });
+      }
       reviews = reviewsSnap.val() || {};
       resolve();
     });
@@ -1063,26 +1078,61 @@ function renderPosts() {
   document.getElementById('posts-count').textContent = `${posts.length} โพสต์`;
   document.getElementById('posts-list').innerHTML = posts.length
     ? posts.map(p => `
-      <div class="post-row">
-        <div class="post-info">
-          <div class="post-title">
-            <span class="post-tag" style="background:rgba(88,166,255,.12);color:${TAG_COLORS[p.tag]||'#58A6FF'}">${TAG_LABELS[p.tag]||p.tag}</span>
-            ${p.title}
+      <div class="post-row" style="flex-direction:column;align-items:stretch;gap:6px">
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <div class="post-info" style="flex:1">
+            <div class="post-title">
+              <span class="post-tag" style="background:rgba(88,166,255,.12);color:${TAG_COLORS[p.tag]||'#58A6FF'}">${TAG_LABELS[p.tag]||p.tag}</span>
+              ${p.title}
+            </div>
+            <div class="post-body-preview">${p.body}</div>
+            <div class="post-meta">${p.author} · ${p.time} · 🔥${p.votes} · 💬${p.comments.length}</div>
           </div>
-          <div class="post-body-preview">${p.body}</div>
-          <div class="post-meta">${p.author} · ${p.time} · 🔥${p.votes} · 💬${p.comments.length}</div>
+          <button class="btn btn-del" onclick="deletePost(${p.id})"><i class="fa fa-trash"></i></button>
         </div>
-        <button class="btn btn-del" onclick="deletePost(${p.id})"><i class="fa fa-trash"></i></button>
+        ${p.comments.length ? `
+          <div style="margin-left:8px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--gray-200)">
+            <div style="font-size:10px;color:var(--gray-500);margin-bottom:4px;font-weight:600">💬 ความคิดเห็น (${p.comments.length})</div>
+            ${p.comments.map((c,i) => `
+              <div style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;${i<p.comments.length-1?'border-bottom:1px solid var(--gray-200)':''}">
+                <div style="flex:1;font-size:11px;line-height:1.5">
+                  <span style="font-weight:600">${c.author||'ไม่ระบุชื่อ'}</span>
+                  <span style="color:var(--gray-500);font-size:10px;margin-left:4px">${c.time||''}</span>
+                  <div style="color:var(--text)">${c.body||''}</div>
+                </div>
+                <button class="btn btn-del" style="padding:2px 7px;font-size:10px;flex-shrink:0" onclick="deleteComment(${p.id},${i})"><i class="fa fa-trash"></i></button>
+              </div>`).join('')}
+          </div>` : ''}
       </div>`).join('')
     : '<div class="empty-state"><i class="fa fa-comments"></i>ยังไม่มีโพสต์</div>';
 }
 
-function deletePost(id) {
+async function deletePost(id) {
   const p = posts.find(x => x.id === id); if (!p) return;
   if (!confirm(`ลบโพสต์ "${p.title.slice(0,30)}..." ?`)) return;
-  posts = posts.filter(x => x.id !== id);
-  saveData(); renderPosts(); renderDashboard();
+  const fbKey = postFbKeys[String(id)];
+  if (fbKey) {
+    await db.ref('posts').child(fbKey).remove();
+  } else {
+    posts = posts.filter(x => x.id !== id);
+    saveData();
+  }
+  renderPosts(); renderDashboard();
   showToast('ลบโพสต์แล้ว');
+}
+
+async function deleteComment(postId, commentIdx) {
+  const p = posts.find(x => String(x.id) === String(postId)); if (!p) return;
+  if (!confirm('ลบความคิดเห็นนี้?')) return;
+  p.comments.splice(commentIdx, 1);
+  const fbKey = postFbKeys[String(postId)];
+  if (fbKey) {
+    await db.ref('posts').child(fbKey).set(p);
+  } else {
+    saveData();
+  }
+  renderPosts();
+  showToast('ลบความคิดเห็นแล้ว');
 }
 
 // ── REPORTS ──────────────────────────────────────────────
@@ -1140,43 +1190,36 @@ function renderReports() {
 
 async function deleteReportedReview(reportId, shopId, reviewKey) {
   if(!confirm('ลบรีวิวนี้ออกจากร้านด้วยไหมครับ?')) return;
-  // ลบรีวิวจาก /reviews/{shopId}/{reviewKey}
   if(reviewKey) {
     await db.ref('reviews').child(String(shopId)).child(String(reviewKey)).remove();
     if(reviews[String(shopId)]) delete reviews[String(shopId)][String(reviewKey)];
   }
-  // ลบ report ออก
-  await loadData();
-  reports = reports.filter(x => String(x.id) !== String(reportId));
-  db.ref('reports').set(reports);
-  renderReports(); updateReportBadge();
+  const fbKey = reportFbKeys[String(reportId)];
+  if (fbKey) await db.ref('reports').child(fbKey).remove();
   showToast('ลบรีวิวแล้ว ✅');
 }
 
 async function dismissReviewReport(reportId) {
-  await loadData();
-  const r = reports.find(x => String(x.id) === String(reportId));
-  if(r){ r.resolved = true; db.ref('reports').set(reports); }
-  renderReports(); updateReportBadge();
+  const fbKey = reportFbKeys[String(reportId)];
+  if (!fbKey) { showToast('❌ ไม่พบรายงานนี้'); return; }
+  await db.ref('reports').child(fbKey).update({resolved: true});
   showToast('เก็บรีวิวไว้แล้ว ✅');
 }
 
 async function resolveReport(id) {
   id = String(id);
-  await loadData();
-  const r = reports.find(x => String(x.id) === id); if (!r) return;
-  r.resolved = true;
-  saveData();
-  renderReports(); updateReportBadge();
+  const fbKey = reportFbKeys[id];
+  if (!fbKey) { showToast('❌ ไม่พบรายงานนี้'); return; }
+  await db.ref('reports').child(fbKey).update({resolved: true});
   showToast('✅ ทำเครื่องหมายแก้ไขแล้ว');
 }
 
 async function deleteReport(id) {
   id = String(id);
-  await loadData();
-  reports = reports.filter(x => String(x.id) !== id);
-  saveData();
-  renderReports(); updateReportBadge();
+  const fbKey = reportFbKeys[id];
+  if (!fbKey) { showToast('❌ ไม่พบรายงานนี้'); return; }
+  if (!confirm('ลบรายงานนี้?')) return;
+  await db.ref('reports').child(fbKey).remove();
   showToast('ลบรายงานแล้ว');
 }
 
