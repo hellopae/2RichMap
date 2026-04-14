@@ -485,6 +485,7 @@ const PARKING = {yes:'✅ มีที่จอด', no:'❌ ไม่มี', n
 // ── STATE ────────────────────────────────────────────────
 let shops = [], pendingShops = [], posts = [], reports = [];
 let reviews = {}; // {shopId: {fbKey: {name,stars,text,date}}}
+let shopFbKeys = {}; // {shopId: firebaseKey} — ใช้ update/delete เฉพาะร้าน
 let editingId = null;
 let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
 let addMenus = [];
@@ -549,7 +550,15 @@ function loadData() {
       db.ref('reviews').once('value')
     ]).then(([shopsSnap, postsSnap, reportsSnap, reviewsSnap]) => {
       const sv = shopsSnap.val();
-      shops = sv ? (Array.isArray(sv) ? sv.filter(Boolean) : Object.values(sv).filter(Boolean)) : [];
+      shops = []; shopFbKeys = {};
+      if (sv) {
+        const entries = Array.isArray(sv)
+          ? sv.map((s, i) => [String(i), s])
+          : Object.entries(sv);
+        entries.forEach(([key, s]) => {
+          if (s) { shops.push(s); if (s.id) shopFbKeys[String(s.id)] = key; }
+        });
+      }
       const pv = postsSnap.val();
       const rawP = pv ? (Array.isArray(pv) ? pv : Object.values(pv)) : [];
       posts = rawP.filter(Boolean).map(p => ({
@@ -676,8 +685,13 @@ async function delShop(id) {
   await loadData();
   const s = shops.find(x => String(x.id) === id); if (!s) return;
   if (!confirm(`ลบ "${s.name}" ?`)) return;
+  const fbKey = shopFbKeys[id];
+  if (!fbKey) { showToast('❌ ไม่พบ key ของร้านนี้'); return; }
+  await db.ref('shops').child(fbKey).remove()
+    .catch(err => { showToast('❌ ลบไม่สำเร็จ: ' + (err.code||err.message)); return; });
+  delete shopFbKeys[id];
   shops = shops.filter(x => String(x.id) !== id);
-  saveData(); renderShopsList(); renderDashboard();
+  renderShopsList(); renderDashboard();
   showToast(`ลบ "${s.name}" แล้ว`);
 }
 
@@ -866,8 +880,13 @@ function saveEdit() {
   if (cv) s.cover = cv;
   s.desc = document.getElementById('e-desc').value.trim();
   s.wongnai = document.getElementById('e-wongnai').value.trim();
-  saveData(); renderShopsList(); closeEditModal();
-  showToast(`✅ บันทึก "${s.name}" แล้ว`);
+  // บันทึกเฉพาะร้านที่แก้ไข — ไม่เขียนทับทั้งหมด
+  const fbKey = shopFbKeys[String(editingId)];
+  const ref = fbKey ? db.ref('shops').child(fbKey) : null;
+  if (!ref) { showToast('❌ ไม่พบ key ของร้านนี้'); return; }
+  ref.set(s)
+    .then(() => { renderShopsList(); closeEditModal(); showToast(`✅ บันทึก "${s.name}" แล้ว`); })
+    .catch(err => showToast('❌ บันทึกไม่สำเร็จ: ' + (err.code || err.message)));
 }
 
 // ── ADD SHOP DIRECTLY ────────────────────────────────────

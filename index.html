@@ -2253,6 +2253,15 @@ function openDet(id){
       <div class="menu-name">${m.name}</div>
     </div>`).join('')}</div></div>`:'';
   const valPct=(s.value||0)/5*100;
+  const _revEntries=Object.entries(reviews[s.id]||{});
+  const revs=_revEntries.map(([key,r])=>`<div class="rev-item">
+    <div class="rev-top">
+      <span class="rev-name">${r.name}</span>
+      <div class="rev-stars">${'<i class="fa fa-star"></i>'.repeat(r.stars||0)}${'<i class="fa fa-star" style="color:var(--gray-200)"></i>'.repeat(5-(r.stars||0))}</div>
+    </div>
+    <div class="rev-text">${r.text}</div>
+    <div class="rev-date">${r.date} · <a href="#" onclick="flagRev('${s.id}','${key}');return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
+  </div>`).join('');
   const wonBtn=s.wongnai?`<div class="sec"><a class="btn-wongnai" href="${s.wongnai}" target="_blank"><i class="fa fa-magnifying-glass"></i> ดูเพิ่มเติมบน Wongnai</a></div>`:'';
   // Build all images for gallery: cover + menu images
   const allImgs=[{src:s.cover,caption:s.name},...s.menus.filter(m=>m.img).map(m=>({src:m.img,caption:m.name}))];
@@ -2296,6 +2305,16 @@ function openDet(id){
       </div>
     </div>
     ${wonBtn}
+    <div class="sec"><div class="sec-t">รีวิวจากผู้ใช้</div>
+      ${revs||`<div style="font-size:13px;color:var(--gray-400);padding:4px 0">ยังไม่มีรีวิว เป็นคนแรกได้เลย!</div>`}
+      <div class="rev-form">
+        <div class="rev-form-t">✍️ เขียนรีวิวของคุณ</div>
+        <div class="star-pick" id="sp-${id}">${[1,2,3,4,5].map(n=>`<i class="fa fa-star" data-v="${n}" onclick="pickStar(${id},${n})"></i>`).join('')}</div>
+        <input type="text" class="form-inp" id="rn-${id}" placeholder="ชื่อของคุณ" style="margin-bottom:7px">
+        <textarea class="form-ta" id="rt-${id}" placeholder="บอกเพื่อนๆ ว่าคุ้มแค่ไหน..." style="min-height:55px"></textarea>
+        <button class="btn-submit" style="padding:10px;font-size:14px;margin-top:7px" onclick="subRev(${id})">ส่งรีวิว</button>
+      </div>
+    </div>
     <div class="det-actions">
       <button class="act-btn act-gray" onclick="shareShop(${id})"><i class="fa fa-share-nodes"></i> แชร์</button>
       <button class="act-btn act-red" onclick="flagShop(${id})"><i class="fa fa-flag"></i> รายงาน</button>
