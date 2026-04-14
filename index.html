@@ -862,7 +862,7 @@
 
       <div class="form-g">
         <label class="form-lbl">📍 ระบุตำแหน่งร้าน<span class="req">*</span></label>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:6px">
           <input type="text" class="form-inp" id="addr-search"
             placeholder="พิมพ์ที่อยู่หรือชื่อสถานที่ เช่น สาทร ซอย 1 กรุงเทพ"
             onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddress()}"
@@ -873,6 +873,15 @@
               display:flex;align-items:center;gap:5px;white-space:nowrap">
             <i class="fa fa-search"></i> ค้นหา
           </button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <div style="position:relative;flex:1">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none">🗺️</span>
+            <input type="text" class="form-inp" id="gmaps-url"
+              placeholder="หรือวาง Google Maps link ที่นี่..."
+              oninput="parseGmapsUrl(this.value)"
+              style="padding-left:30px;font-size:12.5px;color:var(--gray-700)">
+          </div>
         </div>
         <div class="pin-map-bar">
           <div style="font-size:11px;color:var(--gray-500)">💡 คลิกบนแผนที่เพื่อปักหมุด · ลากหมุดเพื่อปรับตำแหน่ง</div>
@@ -3031,6 +3040,38 @@ function updatePinStatus(){
   if(st&&pinLat){
     st.className='pin-status set';
     st.innerHTML=`<i class="fa fa-check-circle"></i> ปักหมุดแล้ว: ${pinLat.toFixed(5)}, ${pinLng.toFixed(5)} (ลากหมุดเพื่อปรับ)`;
+  }
+}
+
+function parseGmapsUrl(url){
+  url=url.trim();
+  if(!url) return;
+  // รูปแบบ @lat,lng (URL แบบ place เต็ม)
+  let m=url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  // รูปแบบ ?q=lat,lng หรือ &q=lat,lng
+  if(!m) m=url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  // รูปแบบ ll=lat,lng
+  if(!m) m=url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  // รูปแบบ center=lat,lng
+  if(!m) m=url.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
+  if(m){
+    const lat=parseFloat(m[1]),lng=parseFloat(m[2]);
+    if(lat<-90||lat>90||lng<-180||lng>180) return;
+    if(!pinMapInited) initPinMap();
+    pinLat=lat; pinLng=lng;
+    pinMap.setView([lat,lng],17);
+    if(pinMarker) pinMap.removeLayer(pinMarker);
+    pinMarker=L.marker([lat,lng],{draggable:true}).addTo(pinMap);
+    pinMarker.on('dragend',e=>{
+      pinLat=e.target.getLatLng().lat;
+      pinLng=e.target.getLatLng().lng;
+      updatePinStatus();
+    });
+    updatePinStatus();
+    showToast('ปักหมุดจาก Google Maps แล้ว! 📍');
+  } else if(url.length>10&&(url.includes('google.com/maps')||url.includes('goo.gl')||url.includes('maps.app'))){
+    // URL สั้น (goo.gl/maps หรือ maps.app.goo.gl) ไม่สามารถดึงพิกัดได้โดยตรง
+    showToast('กรุณาใช้ลิงก์เต็ม: เปิด Google Maps → Share → Copy link ครับ');
   }
 }
 
