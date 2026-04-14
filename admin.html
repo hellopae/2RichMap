@@ -350,9 +350,10 @@
       <!-- REPORTS -->
       <div class="panel" id="panel-reports">
         <div class="sec-head">
-          <span class="sec-title">รายงานปัญหาข้อมูลไม่ถูกต้อง</span>
+          <span class="sec-title">รายงานปัญหา</span>
           <span class="sec-count" id="reports-count"></span>
         </div>
+        <div id="reports-review-list"></div>
         <div id="reports-list"></div>
       </div>
 
@@ -1048,12 +1049,43 @@ function deletePost(id) {
 
 // ── REPORTS ──────────────────────────────────────────────
 function renderReports() {
-  const unresolved = reports.filter(r => !r.resolved);
-  const resolved = reports.filter(r => r.resolved);
-  const all = [...unresolved, ...resolved];
-  document.getElementById('reports-count').textContent = `${unresolved.length} รายการที่ยังไม่ได้แก้ไข`;
-  document.getElementById('reports-list').innerHTML = all.length
-    ? all.map(r => `
+  const reviewReports = reports.filter(r => r.type === 'review' && !r.resolved);
+  const shopReports = reports.filter(r => r.type !== 'review');
+  const unresolvedShop = shopReports.filter(r => !r.resolved);
+  const total = reviewReports.length + unresolvedShop.length;
+  document.getElementById('reports-count').textContent = `${total} รายการที่ยังไม่ได้แก้ไข`;
+
+  // รีวิวที่ถูกรายงาน
+  const revEl = document.getElementById('reports-review-list');
+  if(reviewReports.length){
+    revEl.innerHTML = `<div style="font-size:13px;font-weight:700;color:var(--red);margin:8px 0 8px;display:flex;align-items:center;gap:6px">
+      <i class="fa fa-star" style="color:var(--red)"></i> รีวิวที่ถูกรายงาน (${reviewReports.length})
+    </div>`+reviewReports.map(r=>`
+      <div class="shop-row" style="border-left:3px solid var(--red);padding-left:10px">
+        <div class="shop-info">
+          <div class="shop-name">🏪 <strong>${r.shopName||'ไม่ระบุ'}</strong>
+            <span style="font-size:11px;font-weight:400;color:var(--gray-500);margin-left:6px">${r.submittedAt||''}</span>
+          </div>
+          <div style="margin-top:5px;background:var(--surface3);border-radius:7px;padding:8px 10px;font-size:12px">
+            <div style="font-weight:600;margin-bottom:2px">${r.reviewName||'ไม่ระบุ'} ${'★'.repeat(r.reviewStars||0)}${'☆'.repeat(5-(r.reviewStars||0))}</div>
+            <div style="color:var(--gray-700)">"${r.reviewText||''}"</div>
+          </div>
+        </div>
+        <div class="row-btns" style="flex-direction:column;gap:4px">
+          <button class="btn btn-del" onclick="deleteReportedReview('${r.id}',${r.shopId},${r.reviewIdx})" style="font-size:11px;white-space:nowrap"><i class="fa fa-trash"></i> ลบรีวิว</button>
+          <button class="btn" onclick="dismissReviewReport('${r.id}')" style="font-size:11px;white-space:nowrap;background:var(--surface3);border:1px solid var(--gray-200)"><i class="fa fa-check"></i> เก็บไว้</button>
+        </div>
+      </div>`).join('');
+  } else {
+    revEl.innerHTML = '';
+  }
+
+  // รายงานปัญหาร้านทั่วไป
+  const allShop = [...unresolvedShop, ...shopReports.filter(r=>r.resolved)];
+  document.getElementById('reports-list').innerHTML = allShop.length
+    ? `<div style="font-size:13px;font-weight:700;color:var(--gray-700);margin:12px 0 8px;display:flex;align-items:center;gap:6px">
+        <i class="fa fa-flag"></i> รายงานข้อมูลร้านผิด (${unresolvedShop.length})
+      </div>`+allShop.map(r => `
       <div class="shop-row" style="${r.resolved?'opacity:.5':''}">
         <div class="shop-info">
           <div class="shop-name">${r.resolved?'<span style="color:var(--green);font-size:11px">✅ แก้ไขแล้ว</span> ':''}<strong>${r.shopName||'ไม่ระบุ'}</strong></div>
@@ -1065,7 +1097,32 @@ function renderReports() {
           <button class="btn btn-del" onclick="deleteReport('${r.id}')"><i class="fa fa-trash"></i></button>
         </div>
       </div>`).join('')
-    : '<div class="empty-state"><i class="fa fa-flag"></i>ไม่มีรายงานปัญหา ✅</div>';
+    : (reviewReports.length ? '' : '<div class="empty-state"><i class="fa fa-flag"></i>ไม่มีรายงานปัญหา ✅</div>');
+}
+
+async function deleteReportedReview(reportId, shopId, revIdx) {
+  if(!confirm('ลบรีวิวนี้ออกจากร้านด้วยไหมครับ?')) return;
+  await loadData();
+  // ลบรีวิวออกจากร้าน
+  const s = shops.find(x => String(x.id) === String(shopId));
+  if(s && s.reviewList && s.reviewList[revIdx] !== undefined){
+    s.reviewList.splice(revIdx, 1);
+    s.reviews = Math.max(0, (s.reviews||1) - 1);
+    db.ref('shops').set(shops);
+  }
+  // ลบ report ออก
+  reports = reports.filter(x => String(x.id) !== String(reportId));
+  db.ref('reports').set(reports);
+  renderReports(); updateReportBadge();
+  showToast('ลบรีวิวแล้ว ✅');
+}
+
+async function dismissReviewReport(reportId) {
+  await loadData();
+  const r = reports.find(x => String(x.id) === String(reportId));
+  if(r){ r.resolved = true; db.ref('reports').set(reports); }
+  renderReports(); updateReportBadge();
+  showToast('เก็บรีวิวไว้แล้ว ✅');
 }
 
 async function resolveReport(id) {
