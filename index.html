@@ -880,6 +880,7 @@
             <input type="text" class="form-inp" id="gmaps-url"
               placeholder="หรือวาง Google Maps link ที่นี่..."
               oninput="parseGmapsUrl(this.value)"
+              onpaste="setTimeout(()=>parseGmapsUrl(document.getElementById('gmaps-url').value),50)"
               style="padding-left:30px;font-size:12.5px;color:var(--gray-700)">
           </div>
         </div>
@@ -3043,35 +3044,76 @@ function updatePinStatus(){
   }
 }
 
-function parseGmapsUrl(url){
-  url=url.trim();
-  if(!url) return;
-  // รูปแบบ @lat,lng (URL แบบ place เต็ม)
-  let m=url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  // รูปแบบ ?q=lat,lng หรือ &q=lat,lng
+function _applyGmapsCoords(url){
+  // Priority 1: !3d{lat}!4d{lng} — พิกัด pin จริง (แม่นที่สุด)
+  let m=url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  // Priority 2: @lat,lng — viewport center (ส่วนใหญ่ใกล้พอ)
+  if(!m) m=url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  // Priority 3: รูปแบบอื่นๆ
   if(!m) m=url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  // รูปแบบ ll=lat,lng
   if(!m) m=url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
-  // รูปแบบ center=lat,lng
   if(!m) m=url.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
-  if(m){
-    const lat=parseFloat(m[1]),lng=parseFloat(m[2]);
-    if(lat<-90||lat>90||lng<-180||lng>180) return;
-    if(!pinMapInited) initPinMap();
-    pinLat=lat; pinLng=lng;
-    pinMap.setView([lat,lng],17);
-    if(pinMarker) pinMap.removeLayer(pinMarker);
-    pinMarker=L.marker([lat,lng],{draggable:true}).addTo(pinMap);
-    pinMarker.on('dragend',e=>{
-      pinLat=e.target.getLatLng().lat;
-      pinLng=e.target.getLatLng().lng;
-      updatePinStatus();
-    });
+  if(!m) return false;
+  const lat=parseFloat(m[1]),lng=parseFloat(m[2]);
+  if(lat<-90||lat>90||lng<-180||lng>180) return false;
+  if(!pinMapInited) initPinMap();
+  pinLat=lat; pinLng=lng;
+  pinMap.setView([lat,lng],18);
+  if(pinMarker) pinMap.removeLayer(pinMarker);
+  pinMarker=L.marker([lat,lng],{draggable:true}).addTo(pinMap);
+  pinMarker.on('dragend',e=>{
+    pinLat=e.target.getLatLng().lat;
+    pinLng=e.target.getLatLng().lng;
     updatePinStatus();
-    showToast('ปักหมุดจาก Google Maps แล้ว! 📍');
-  } else if(url.length>10&&(url.includes('google.com/maps')||url.includes('goo.gl')||url.includes('maps.app'))){
-    // URL สั้น (goo.gl/maps หรือ maps.app.goo.gl) ไม่สามารถดึงพิกัดได้โดยตรง
-    showToast('กรุณาใช้ลิงก์เต็ม: เปิด Google Maps → Share → Copy link ครับ');
+  });
+  updatePinStatus();
+  showToast('ปักหมุดจาก Google Maps แล้ว! 📍');
+  return true;
+}
+
+async function parseGmapsUrl(url){
+  url=url.trim();
+  if(!url||url.length<10) return;
+
+  const inp=document.getElementById('gmaps-url');
+
+  // ถ้าเป็น URL เต็ม Google Maps — ดึงพิกัดเลย
+  if(url.includes('google.com/maps')){
+    _applyGmapsCoords(url);
+    return;
+  }
+
+  // ถ้าเป็น link สั้น (maps.app.goo.gl / goo.gl/maps)
+  if(url.includes('goo.gl')||url.includes('maps.app')){
+    // ต้อง follow redirect ผ่าน CORS proxy
+    inp.style.opacity='0.5';
+    inp.disabled=true;
+    showToast('⏳ กำลังดึงตำแหน่ง...');
+    try{
+      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const res=await fetch(proxy,{signal:AbortSignal.timeout(10000)});
+      const json=await res.json();
+      // final URL หลัง redirect
+      const finalUrl=json?.status?.url||'';
+      if(finalUrl&&finalUrl.includes('google.com/maps')){
+        inp.style.opacity='1'; inp.disabled=false;
+        if(!_applyGmapsCoords(finalUrl)){
+          showToast('ไม่พบพิกัดใน link นี้ ลองคลิกบนแผนที่แทนครับ');
+        }
+        return;
+      }
+      // พยายาม parse จาก HTML content
+      const content=json?.contents||'';
+      const urlMatch=content.match(/https:\/\/www\.google\.com\/maps\/place\/[^"\\<>]*/);
+      if(urlMatch&&_applyGmapsCoords(urlMatch[0])){
+        inp.style.opacity='1'; inp.disabled=false;
+        return;
+      }
+      showToast('ดึงตำแหน่งไม่สำเร็จ กรุณาใช้ลิงก์เต็มครับ');
+    }catch(e){
+      showToast('ดึงตำแหน่งไม่สำเร็จ กรุณาใช้ลิงก์เต็มครับ');
+    }
+    inp.style.opacity='1'; inp.disabled=false;
   }
 }
 
