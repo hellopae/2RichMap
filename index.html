@@ -2236,7 +2236,7 @@ function openDet(id){
   const menus=s.menus.length?`<div class="sec"><div class="sec-t">เมนูอาหาร</div>
     <div class="menu-scroll">${s.menus.map(m=>`<div class="menu-card">
       <img class="menu-img" src="${m.img}" loading="lazy" onerror="this.src=''" alt="">
-      <div class="menu-name">${m.name}</div><div class="menu-price">${m.price}฿</div>
+      <div class="menu-name">${m.name}</div>
     </div>`).join('')}</div></div>`:'';
   const valPct=(s.value||0)/5*100;
   const revs=s.reviewList.map((r,i)=>`<div class="rev-item">

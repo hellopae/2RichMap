@@ -124,6 +124,12 @@
     /* Menu items in edit */
     .menu-item-row{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px;background:var(--surface3)}
     .menu-thumb-sm{width:48px;height:36px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+    .menu-thumb-wrap{position:relative;width:52px;height:42px;flex-shrink:0;cursor:pointer;border-radius:6px;overflow:hidden;background:var(--surface2);border:1.5px dashed var(--gray-300)}
+    .menu-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+    .menu-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;opacity:0;transition:opacity .15s}
+    .menu-thumb-wrap:hover .menu-thumb-overlay{opacity:1}
+    .btn-upload-img{display:flex;align-items:center;gap:4px;padding:5px 9px;border-radius:7px;border:1px solid var(--gray-300);background:var(--surface3);color:var(--gray-700);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .15s;flex-shrink:0}
+    .btn-upload-img:hover{border-color:var(--green);color:var(--green)}
     .rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px;background:var(--surface3)}
 
     /* Posts */
@@ -293,8 +299,11 @@
             </div>
           </div>
           <div class="form-g">
-            <label class="form-lbl">รูปหน้าปก (URL)</label>
-            <input type="text" class="form-inp" id="a-cover" placeholder="https://..." oninput="previewAddCover()">
+            <label class="form-lbl">รูปหน้าปก</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="text" class="form-inp" id="a-cover" placeholder="URL หรืออัปโหลดรูป" oninput="previewAddCover()" style="flex:1">
+              <button class="btn-upload-img" onclick="pickImg('add-cover')"><i class="fa fa-upload"></i> อัปโหลด</button>
+            </div>
             <div class="cover-preview" id="a-cover-preview"><img id="a-cover-img" alt=""></div>
           </div>
           <div class="form-g">
@@ -412,8 +421,11 @@
         <input type="text" class="form-inp" id="e-hours" placeholder="08:00-20:00">
       </div>
       <div class="form-g">
-        <label class="form-lbl">รูปหน้าปก (URL)</label>
-        <input type="text" class="form-inp" id="e-cover" oninput="editPreviewCover()">
+        <label class="form-lbl">รูปหน้าปก</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" class="form-inp" id="e-cover" oninput="editPreviewCover()" placeholder="URL หรืออัปโหลดรูป" style="flex:1">
+          <button class="btn-upload-img" onclick="pickImg('edit-cover')"><i class="fa fa-upload"></i> อัปโหลด</button>
+        </div>
         <div class="cover-preview" id="e-cover-preview"><img id="e-cover-img" alt=""></div>
       </div>
       <div class="form-g">
@@ -702,17 +714,69 @@ function editPreviewCover() {
   if (v) { img.src = v; prev.style.display = 'block'; } else prev.style.display = 'none';
 }
 
+// ── IMAGE UPLOAD ─────────────────────────────────────────
+function compressImage(file, maxW=700, maxH=500, quality=0.78) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+let _imgTarget = null;
+function pickImg(type, idx) {
+  _imgTarget = {type, idx};
+  document.getElementById('global-img-input').click();
+}
+async function handleImgUpload(input) {
+  if (!input.files[0] || !_imgTarget) return;
+  showToast('กำลังบีบอัดรูป...');
+  const dataUrl = await compressImage(input.files[0]);
+  const {type, idx} = _imgTarget;
+  if (type === 'edit-menu') {
+    const s = shops.find(x => String(x.id) === String(editingId));
+    if (s && s.menus[idx]) { s.menus[idx].img = dataUrl; renderEditMenus(s); }
+  } else if (type === 'add-menu') {
+    collectAddMenuEntries();
+    if (addMenuEntries[idx]) { addMenuEntries[idx].img = dataUrl; renderAddMenus(); }
+  } else if (type === 'edit-cover') {
+    document.getElementById('e-cover').value = dataUrl;
+    document.getElementById('e-cover-img').src = dataUrl;
+    document.getElementById('e-cover-preview').style.display = 'block';
+  } else if (type === 'add-cover') {
+    document.getElementById('a-cover').value = dataUrl;
+    document.getElementById('a-cover-img').src = dataUrl;
+    document.getElementById('a-cover-preview').style.display = 'block';
+  }
+  input.value = '';
+  showToast('อัปโหลดรูปเรียบร้อย ✅');
+}
+
 function renderEditMenus(s) {
   const el = document.getElementById('e-menus-list');
   if (!s.menus || !s.menus.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0">ยังไม่มีเมนู</div>'; return; }
   el.innerHTML = s.menus.map((m, i) => `
     <div class="menu-item-row">
-      <img class="menu-thumb-sm" src="${m.img}" onerror="this.style.background='var(--surface2)'" alt="">
+      <div class="menu-thumb-wrap" onclick="pickImg('edit-menu',${i})" title="คลิกเพื่ออัปโหลดรูป">
+        ${m.img ? `<img src="${m.img}" onerror="this.style.display='none'" alt="">` : ''}
+        <div class="menu-thumb-overlay"><i class="fa fa-camera"></i></div>
+      </div>
       <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
         <input type="text" class="form-inp" value="${m.name}" id="emn-${i}" placeholder="ชื่อเมนู" style="padding:6px 10px;font-size:12px">
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
           <input type="number" class="form-inp" value="${m.price}" id="emp-${i}" placeholder="฿" style="padding:6px 10px;font-size:12px;width:80px;flex-shrink:0">
-          <input type="text" class="form-inp" value="${m.img}" id="emi-${i}" placeholder="URL รูป" style="padding:6px 10px;font-size:12px;flex:1">
+          <button class="btn-upload-img" onclick="pickImg('edit-menu',${i})"><i class="fa fa-image"></i> อัปโหลดรูป</button>
         </div>
       </div>
       <button class="btn btn-del" onclick="eRemoveMenu(${i})">🗑️</button>
@@ -858,10 +922,16 @@ function renderAddMenus() {
   if (!addMenuEntries.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:4px 0">ยังไม่มีเมนู (ไม่บังคับ)</div>'; return; }
   el.innerHTML = addMenuEntries.map((m, i) => `
     <div class="menu-item-row">
-      <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap;min-width:0">
-        <input type="text" class="form-inp" value="${m.name}" id="amn-${i}" placeholder="ชื่อเมนู" style="padding:6px 10px;font-size:12px;flex:2;min-width:100px">
-        <input type="number" class="form-inp" value="${m.price}" id="amp-${i}" placeholder="฿" style="padding:6px 10px;font-size:12px;width:80px;flex-shrink:0">
-        <input type="text" class="form-inp" value="${m.img}" id="ami-${i}" placeholder="URL รูป" style="padding:6px 10px;font-size:12px;flex:3;min-width:120px">
+      <div class="menu-thumb-wrap" onclick="pickImg('add-menu',${i})" title="คลิกเพื่ออัปโหลดรูป">
+        ${m.img ? `<img src="${m.img}" onerror="this.style.display='none'" alt="">` : ''}
+        <div class="menu-thumb-overlay"><i class="fa fa-camera"></i></div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+        <input type="text" class="form-inp" value="${m.name}" id="amn-${i}" placeholder="ชื่อเมนู" style="padding:6px 10px;font-size:12px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="number" class="form-inp" value="${m.price}" id="amp-${i}" placeholder="฿" style="padding:6px 10px;font-size:12px;width:80px;flex-shrink:0">
+          <button class="btn-upload-img" onclick="pickImg('add-menu',${i})"><i class="fa fa-image"></i> อัปโหลดรูป</button>
+        </div>
       </div>
       <button class="btn btn-del" onclick="removeMenuEntry(${i})">🗑️</button>
     </div>`).join('');
@@ -1029,5 +1099,6 @@ function showToast(msg) {
 // ── INIT ─────────────────────────────────────────────────
 renderAddMenus();
 </script>
+<input type="file" id="global-img-input" accept="image/*" style="display:none" onchange="handleImgUpload(this)">
 </body>
 </html>
