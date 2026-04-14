@@ -2034,6 +2034,7 @@ const _legacyData = [{id:999,name:"ผัดไทยทิพย์สมัย
 
 let pendingShops = [];
 let reportedReviews = [];
+let reviews = {}; // {shopId: {fbKey: {name,stars,text,date}, ...}}
 
 // ── CONFIG ──────────────────────────────────────────────
 const CAT = {
@@ -2252,13 +2253,15 @@ function openDet(id){
       <div class="menu-name">${m.name}</div>
     </div>`).join('')}</div></div>`:'';
   const valPct=(s.value||0)/5*100;
-  const revs=s.reviewList.map((r,i)=>`<div class="rev-item">
+  const _revEntries=Object.entries(reviews[s.id]||{});
+  const revCount=_revEntries.length;
+  const revs=_revEntries.map(([key,r])=>`<div class="rev-item">
     <div class="rev-top">
       <span class="rev-name">${r.name}</span>
-      <div class="rev-stars">${'<i class="fa fa-star"></i>'.repeat(r.stars)}${'<i class="fa fa-star" style="color:var(--gray-200)"></i>'.repeat(5-r.stars)}</div>
+      <div class="rev-stars">${'<i class="fa fa-star"></i>'.repeat(r.stars||0)}${'<i class="fa fa-star" style="color:var(--gray-200)"></i>'.repeat(5-(r.stars||0))}</div>
     </div>
     <div class="rev-text">${r.text}</div>
-    <div class="rev-date">${r.date} · <a href="#" onclick="flagRev(${s.id},${i});return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
+    <div class="rev-date">${r.date} · <a href="#" onclick="flagRev('${s.id}','${key}');return false" style="color:var(--red);font-size:10px">รายงาน</a></div>
   </div>`).join('');
   const wonBtn=s.wongnai?`<div class="sec"><a class="btn-wongnai" href="${s.wongnai}" target="_blank"><i class="fa fa-magnifying-glass"></i> ดูเพิ่มเติมบน Wongnai</a></div>`:'';
   // Build all images for gallery: cover + menu images
@@ -2299,7 +2302,7 @@ function openDet(id){
     <div class="sec"><div class="sec-t">ข้อมูลเพิ่มเติม</div>
       <div class="info-grid">
         <div class="info-box"><div class="info-lbl">ที่จอดรถ</div><div class="info-val">${PARKING[s.parking]||'-'}</div></div>
-        <div class="info-box"><div class="info-lbl">รีวิวทั้งหมด</div><div class="info-val">${s.reviews} รีวิว</div></div>
+        <div class="info-box"><div class="info-lbl">รีวิวทั้งหมด</div><div class="info-val">${revCount} รีวิว</div></div>
       </div>
     </div>
     ${wonBtn}
@@ -2331,24 +2334,25 @@ function subRev(sid){
   const nm=document.getElementById(`rn-${sid}`).value.trim()||'ผู้ใช้ไม่ระบุชื่อ';
   if(!txt){showToast('กรุณาเขียนรีวิวก่อนนะครับ');return;}
   if(!st){showToast('กรุณาให้ดาวก่อนนะครับ ⭐');return;}
-  const s=shops.find(x=>x.id===sid); if(!s) return;
-  s.reviewList.unshift({name:nm,stars:st,text:txt,date:'เมื่อกี้'});
-  s.reviews=(s.reviews||0)+1;
-  saveShops(); // บันทึกรีวิวลง Firebase
-  showToast('ขอบคุณสำหรับรีวิว! 🙏');
-  setTimeout(()=>openDet(sid),400);
+  // บันทึกรีวิวใน /reviews/{shopId} แยกต่างหาก — ไม่ต้องแตะ shops node เลย
+  db.ref('reviews').child(String(sid)).push({
+    name:nm, stars:st, text:txt,
+    date:new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})
+  }).then(()=>{
+    showToast('ขอบคุณสำหรับรีวิว! 🙏');
+    setTimeout(()=>openDet(sid),300);
+  }).catch(()=>showToast('บันทึกรีวิวไม่สำเร็จ กรุณาลองใหม่'));
 }
 
-function flagRev(sid,idx){
-  const s=shops.find(x=>x.id===sid); if(!s) return;
-  const r=s.reviewList[idx]; if(!r) return;
-  // บันทึกรายงานลง Firebase
+function flagRev(sid,reviewKey){
+  const r=reviews[sid]?.[reviewKey]; if(!r) return;
+  const s=shops.find(x=>String(x.id)===String(sid));
   db.ref('reports').push({
     id: Date.now(),
     type: 'review',
     shopId: sid,
-    shopName: s.name,
-    reviewIdx: idx,
+    shopName: s?.name||'ไม่ระบุ',
+    reviewKey: reviewKey,
     reviewName: r.name,
     reviewText: r.text,
     reviewStars: r.stars||0,
@@ -3364,6 +3368,10 @@ function initFirebase() {
   db.ref('reports').on('value', snap => {
     const val = snap.val();
     reports = val ? (Array.isArray(val) ? val.filter(Boolean) : Object.values(val).filter(Boolean)) : [];
+  });
+  // รีวิวแยก node — อ่านครั้งเดียวแล้ว real-time update
+  db.ref('reviews').on('value', snap => {
+    reviews = snap.val() || {};
   });
 }
 

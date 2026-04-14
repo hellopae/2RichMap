@@ -484,6 +484,7 @@ const PARKING = {yes:'✅ มีที่จอด', no:'❌ ไม่มี', n
 
 // ── STATE ────────────────────────────────────────────────
 let shops = [], pendingShops = [], posts = [], reports = [];
+let reviews = {}; // {shopId: {fbKey: {name,stars,text,date}}}
 let editingId = null;
 let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
 let addMenus = [];
@@ -535,8 +536,9 @@ function loadData() {
     Promise.all([
       db.ref('shops').once('value'),
       db.ref('posts').once('value'),
-      db.ref('reports').once('value')
-    ]).then(([shopsSnap, postsSnap, reportsSnap]) => {
+      db.ref('reports').once('value'),
+      db.ref('reviews').once('value')
+    ]).then(([shopsSnap, postsSnap, reportsSnap, reviewsSnap]) => {
       const sv = shopsSnap.val();
       shops = sv ? (Array.isArray(sv) ? sv.filter(Boolean) : Object.values(sv).filter(Boolean)) : [];
       const pv = postsSnap.val();
@@ -548,6 +550,7 @@ function loadData() {
       }));
       const rv = reportsSnap.val();
       reports = rv ? (Array.isArray(rv) ? rv.filter(Boolean) : Object.values(rv).filter(Boolean)) : [];
+      reviews = reviewsSnap.val() || {};
       resolve();
     });
   });
@@ -812,24 +815,31 @@ function eRemoveMenu(i) {
 
 function renderEditReviews(s) {
   const el = document.getElementById('e-reviews-list');
-  if (!s.reviewList || !s.reviewList.length) { el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0">ยังไม่มีรีวิว</div>'; return; }
-  el.innerHTML = s.reviewList.map((r, i) => `
+  const shopRevs = reviews[String(s.id)] || {};
+  const entries = Object.entries(shopRevs);
+  if (!entries.length) {
+    el.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:8px 0">ยังไม่มีรีวิว</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([key, r]) => `
     <div class="rev-row">
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;margin-bottom:2px">${r.name} ${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:2px">${r.name} ${'★'.repeat(r.stars||0)}${'☆'.repeat(5-(r.stars||0))}</div>
         <div style="font-size:12px;color:var(--gray-700)">"${r.text}"</div>
-        <div style="font-size:10px;color:var(--gray-500);margin-top:2px">${r.date}</div>
+        <div style="font-size:10px;color:var(--gray-500);margin-top:2px">${r.date||''}</div>
       </div>
-      <button class="btn btn-del" onclick="eDeleteReview(${i})" style="flex-shrink:0">🗑️</button>
+      <button class="btn btn-del" onclick="eDeleteReview('${key}')" style="flex-shrink:0">🗑️</button>
     </div>`).join('');
 }
 
-function eDeleteReview(i) {
+function eDeleteReview(key) {
   const s = shops.find(x => String(x.id) === String(editingId)); if (!s) return;
-  s.reviewList.splice(i, 1);
-  s.reviews = Math.max(0, s.reviews - 1);
-  renderEditReviews(s);
-  showToast('ลบรีวิวแล้ว');
+  db.ref('reviews').child(String(s.id)).child(key).remove().then(() => {
+    // อัปเดต local cache
+    if (reviews[String(s.id)]) delete reviews[String(s.id)][key];
+    renderEditReviews(s);
+    showToast('ลบรีวิวแล้ว ✅');
+  }).catch(() => showToast('ลบไม่สำเร็จ กรุณาลองใหม่'));
 }
 
 function saveEdit() {
@@ -1072,7 +1082,7 @@ function renderReports() {
           </div>
         </div>
         <div class="row-btns" style="flex-direction:column;gap:4px">
-          <button class="btn btn-del" onclick="deleteReportedReview('${r.id}',${r.shopId},${r.reviewIdx})" style="font-size:11px;white-space:nowrap"><i class="fa fa-trash"></i> ลบรีวิว</button>
+          <button class="btn btn-del" onclick="deleteReportedReview('${r.id}','${r.shopId}','${r.reviewKey}')" style="font-size:11px;white-space:nowrap"><i class="fa fa-trash"></i> ลบรีวิว</button>
           <button class="btn" onclick="dismissReviewReport('${r.id}')" style="font-size:11px;white-space:nowrap;background:var(--surface3);border:1px solid var(--gray-200)"><i class="fa fa-check"></i> เก็บไว้</button>
         </div>
       </div>`).join('');
@@ -1100,17 +1110,15 @@ function renderReports() {
     : (reviewReports.length ? '' : '<div class="empty-state"><i class="fa fa-flag"></i>ไม่มีรายงานปัญหา ✅</div>');
 }
 
-async function deleteReportedReview(reportId, shopId, revIdx) {
+async function deleteReportedReview(reportId, shopId, reviewKey) {
   if(!confirm('ลบรีวิวนี้ออกจากร้านด้วยไหมครับ?')) return;
-  await loadData();
-  // ลบรีวิวออกจากร้าน
-  const s = shops.find(x => String(x.id) === String(shopId));
-  if(s && s.reviewList && s.reviewList[revIdx] !== undefined){
-    s.reviewList.splice(revIdx, 1);
-    s.reviews = Math.max(0, (s.reviews||1) - 1);
-    db.ref('shops').set(shops);
+  // ลบรีวิวจาก /reviews/{shopId}/{reviewKey}
+  if(reviewKey) {
+    await db.ref('reviews').child(String(shopId)).child(String(reviewKey)).remove();
+    if(reviews[String(shopId)]) delete reviews[String(shopId)][String(reviewKey)];
   }
   // ลบ report ออก
+  await loadData();
   reports = reports.filter(x => String(x.id) !== String(reportId));
   db.ref('reports').set(reports);
   renderReports(); updateReportBadge();
