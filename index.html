@@ -2505,15 +2505,18 @@ function submitShop(){
   const desc=document.getElementById('f-desc').value.trim();
   const cover=uploadedImgs[0]||`https://picsum.photos/seed/${Date.now()}/800/400`;
   const menus=uploadedImgs.slice(1).map((img,i)=>({name:`เมนู ${i+1}`,price:0,img}));
-  shops.push({
+  const newShop={
     id:Date.now(),name,cat,location:loc,lat:pinLat,lng:pinLng,
     priceMin:pMin,priceMax:pMax,rating:0,reviews:0,value:valPick,
     status:"approved",reportCount:0,parking:park,cover,menus,desc,wongnai:'',
     reviewList:[],submittedAt:'เมื่อกี้'
-  });
+  };
   document.getElementById('add-form').style.display='none';
   document.getElementById('add-success').style.display='block';
-  saveShops();
+  // ใช้ push() แทน set() เพื่อไม่ให้ทับข้อมูลเดิม
+  db.ref('shops').push(newShop).catch(err=>{
+    showToast('⚠️ บันทึกไม่สำเร็จ กรุณาลองใหม่: '+(err.code||err.message));
+  });
 }
 
 // ── MODAL HELPERS ────────────────────────────────────────
@@ -3047,14 +3050,30 @@ function updatePinStatus(){
 function _applyGmapsCoords(url){
   // Priority 1: !3d{lat}!4d{lng} — พิกัด pin จริง (แม่นที่สุด)
   let m=url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-  // Priority 2: @lat,lng — viewport center (ส่วนใหญ่ใกล้พอ)
+  // Priority 2: @lat,lng
   if(!m) m=url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  // Priority 3: รูปแบบอื่นๆ
   if(!m) m=url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if(!m) m=url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if(!m) m=url.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
   if(!m) return false;
-  const lat=parseFloat(m[1]),lng=parseFloat(m[2]);
+  return _setPinCoords(parseFloat(m[1]),parseFloat(m[2]));
+}
+
+// ดึงพิกัดจาก HTML content ของ Google Maps
+function _coordsFromHtml(html){
+  let m=html.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if(m) return {lat:parseFloat(m[1]),lng:parseFloat(m[2])};
+  m=html.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if(m) return {lat:parseFloat(m[1]),lng:parseFloat(m[2])};
+  m=html.match(/"lat":(-?\d+\.\d+),"lng":(-?\d+\.\d+)/);
+  if(m) return {lat:parseFloat(m[1]),lng:parseFloat(m[2])};
+  // array [lat,lng] ในช่วงไทย
+  m=html.match(/\[(1[0-9]\.\d{4,}),(9[7-9]\.\d{4,}|10[0-6]\.\d{4,})\]/);
+  if(m) return {lat:parseFloat(m[1]),lng:parseFloat(m[2])};
+  return null;
+}
+
+function _setPinCoords(lat,lng){
   if(lat<-90||lat>90||lng<-180||lng>180) return false;
   if(!pinMapInited) initPinMap();
   pinLat=lat; pinLng=lng;
@@ -3074,45 +3093,48 @@ function _applyGmapsCoords(url){
 async function parseGmapsUrl(url){
   url=url.trim();
   if(!url||url.length<10) return;
-
   const inp=document.getElementById('gmaps-url');
 
-  // ถ้าเป็น URL เต็ม Google Maps — ดึงพิกัดเลย
-  if(url.includes('google.com/maps')){
+  // URL เต็ม — ดึงพิกัดทันที
+  if(url.includes('google.com/maps')||url.includes('google.co.th/maps')){
     _applyGmapsCoords(url);
     return;
   }
 
-  // ถ้าเป็น link สั้น (maps.app.goo.gl / goo.gl/maps)
+  // Link สั้น — ต้อง follow redirect ผ่าน CORS proxy
   if(url.includes('goo.gl')||url.includes('maps.app')){
-    // ต้อง follow redirect ผ่าน CORS proxy
     inp.style.opacity='0.5';
     inp.disabled=true;
     showToast('⏳ กำลังดึงตำแหน่ง...');
-    try{
-      const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const res=await fetch(proxy,{signal:AbortSignal.timeout(10000)});
-      const json=await res.json();
-      // final URL หลัง redirect
-      const finalUrl=json?.status?.url||'';
-      if(finalUrl&&finalUrl.includes('google.com/maps')){
-        inp.style.opacity='1'; inp.disabled=false;
-        if(!_applyGmapsCoords(finalUrl)){
-          showToast('ไม่พบพิกัดใน link นี้ ลองคลิกบนแผนที่แทนครับ');
+    let ok=false;
+    // ลอง 2 proxy ตามลำดับ
+    const proxies=[
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+    for(const proxy of proxies){
+      try{
+        const res=await fetch(proxy,{signal:AbortSignal.timeout(10000)});
+        let text='';
+        if(proxy.includes('allorigins')){
+          const j=await res.json();
+          // ลอง final URL จาก status
+          const fu=j?.status?.url||'';
+          if(fu&&fu.includes('google.com/maps')&&_applyGmapsCoords(fu)){ok=true;break;}
+          text=j?.contents||'';
+        } else {
+          text=await res.text();
         }
-        return;
-      }
-      // พยายาม parse จาก HTML content
-      const content=json?.contents||'';
-      const urlMatch=content.match(/https:\/\/www\.google\.com\/maps\/place\/[^"\\<>]*/);
-      if(urlMatch&&_applyGmapsCoords(urlMatch[0])){
-        inp.style.opacity='1'; inp.disabled=false;
-        return;
-      }
-      showToast('ดึงตำแหน่งไม่สำเร็จ กรุณาใช้ลิงก์เต็มครับ');
-    }catch(e){
-      showToast('ดึงตำแหน่งไม่สำเร็จ กรุณาใช้ลิงก์เต็มครับ');
+        if(!text) continue;
+        // ลอง parse URL ของ Google Maps ใน content
+        const gm=text.match(/https?:\/\/(?:www\.)?google\.com\/maps\/place\/[^"'<>\s\\]*/)?.[0];
+        if(gm&&_applyGmapsCoords(gm)){ok=true;break;}
+        // ลอง parse พิกัดตรงๆ จาก HTML
+        const c=_coordsFromHtml(text);
+        if(c&&_setPinCoords(c.lat,c.lng)){ok=true;break;}
+      }catch(e){ continue; }
     }
+    if(!ok) showToast('ดึงตำแหน่งไม่สำเร็จ\nกรุณาใช้ลิงก์เต็ม: เปิด Google Maps → กดร้าน → Share → Copy link');
     inp.style.opacity='1'; inp.disabled=false;
   }
 }
