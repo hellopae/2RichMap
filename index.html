@@ -2528,13 +2528,13 @@ function submitShop(){
   const newShop={
     id:Date.now(),name,cat,location:loc,lat:pinLat,lng:pinLng,
     priceMin:pMin,priceMax:pMax,rating:0,reviews:0,value:valPick,
-    status:"approved",reportCount:0,parking:park,cover,menus,desc,wongnai:'',
-    reviewList:[],submittedAt:'เมื่อกี้'
+    status:"pending",reportCount:0,parking:park,cover,menus,desc,wongnai:'',
+    reviewList:[],submittedAt:new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})
   };
   document.getElementById('add-form').style.display='none';
   document.getElementById('add-success').style.display='block';
-  // ใช้ push() แทน set() เพื่อไม่ให้ทับข้อมูลเดิม
-  db.ref('shops').push(newShop).catch(err=>{
+  // ส่งไปรอ Admin อนุมัติก่อนแสดงบนแผนที่
+  db.ref('pendingShops').push(newShop).catch(err=>{
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาลองใหม่: '+(err.code||err.message));
   });
 }
