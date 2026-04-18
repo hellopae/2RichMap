@@ -4,80 +4,136 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2RichMap — แผนที่รวยไม่ไหวแล้ว</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
     :root {
-      --green:#2E7D32; --green-light:#43A047; --green-pale:rgba(46,125,50,.10);
-      --yellow:#F59E0B; --yellow-dark:#D97706; --yellow-pale:rgba(245,158,11,.08);
-      --red:#DC2626; --red-pale:rgba(220,38,38,.10);
-      --blue:#2563EB; --blue-pale:rgba(37,99,235,.10);
-      --gray-50:#F5F6F8; --gray-100:#EAECEF; --gray-200:rgba(0,0,0,.09);
-      --gray-300:rgba(0,0,0,.16); --gray-500:#6B7280;
-      --gray-700:#374151; --gray-900:#111827;
-      --surface:#FFFFFF; --surface2:#F9FAFB; --surface3:#F3F4F6;
-      --font:'Sarabun',sans-serif;
-      --shadow:0 2px 12px rgba(0,0,0,.10); --shadow-lg:0 8px 28px rgba(0,0,0,.16);
-      --radius:12px;
+      /* Neutrals — warm, very low saturation */
+      --bg: oklch(0.985 0.004 80);
+      --surface: oklch(1 0 0);
+      --surface-2: oklch(0.97 0.005 80);
+      --surface-3: oklch(0.94 0.006 80);
+      --border: oklch(0.92 0.006 80);
+      --border-strong: oklch(0.86 0.008 80);
+      --ink: oklch(0.2 0.01 70);
+      --ink-2: oklch(0.42 0.012 70);
+      --ink-3: oklch(0.58 0.01 70);
+      --ink-4: oklch(0.72 0.008 70);
+
+      /* Accent */
+      --accent: oklch(0.68 0.17 45);
+      --accent-ink: oklch(0.38 0.13 45);
+      --accent-soft: oklch(0.96 0.035 45);
+
+      /* Semantic */
+      --success: oklch(0.62 0.13 155);
+      --warn: oklch(0.72 0.14 75);
+      --danger: oklch(0.58 0.18 25);
+
+      /* Radii */
+      --r-xs: 6px;
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --r-pill: 999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.04), 0 1px 3px oklch(0 0 0 / 0.05);
+      --shadow-md: 0 2px 6px oklch(0 0 0 / 0.05), 0 8px 24px oklch(0 0 0 / 0.06);
+      --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.08), 0 20px 48px oklch(0 0 0 / 0.08);
+
+      /* Type */
+      --font: "Inter", "Noto Sans Thai", system-ui, -apple-system, sans-serif;
+
+      /* Legacy color aliases for JS-generated HTML */
+      --green: var(--success);
+      --green-light: oklch(0.7 0.14 155);
+      --green-pale: oklch(0.96 0.035 155);
+      --yellow: var(--warn);
+      --yellow-dark: oklch(0.62 0.15 75);
+      --yellow-pale: oklch(0.97 0.02 75);
+      --red: var(--danger);
+      --red-pale: oklch(0.97 0.025 25);
+      --blue: oklch(0.55 0.18 250);
+      --blue-pale: oklch(0.96 0.03 250);
+      --gray-50: var(--bg);
+      --gray-100: var(--surface-2);
+      --gray-200: var(--border);
+      --gray-300: var(--border-strong);
+      --gray-400: var(--ink-4);
+      --gray-500: var(--ink-3);
+      --gray-700: var(--ink-2);
+      --gray-900: var(--ink);
+      --surface2: var(--surface-2);
+      --surface3: var(--surface-3);
+      --shadow: var(--shadow-md);
+      --radius: var(--r-md);
     }
-    *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;font-family:var(--font);background:var(--gray-50);color:var(--gray-900);overflow:hidden}
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+    html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--ink);overflow:hidden;font-feature-settings:"ss01","cv11"}
 
     /* ── HEADER ── */
     #header{
       position:fixed;top:0;left:0;right:0;z-index:1000;
-      background:#FFFFFF;border-bottom:1px solid var(--gray-200);
+      background:var(--surface);border-bottom:1px solid var(--border);
       display:flex;align-items:center;
-      justify-content:space-between;padding:0 16px;height:56px;box-shadow:var(--shadow)
+      justify-content:space-between;padding:0 16px;height:56px;box-shadow:var(--shadow-sm)
     }
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
     .logo-badge{
-      width:38px;height:38px;background:var(--green);border-radius:9px;
+      width:36px;height:36px;background:var(--ink);border-radius:9px;
       display:flex;align-items:center;justify-content:center;
-      font-size:17px;font-weight:900;color:#fff;letter-spacing:-1px
+      font-size:15px;font-weight:700;color:#fff;letter-spacing:-1px
     }
-    .logo-name{color:var(--gray-900);font-weight:800;font-size:20px;letter-spacing:-0.5px}
+    .logo-name{color:var(--ink);font-weight:700;font-size:18px;letter-spacing:-0.5px}
     .hdr-btns{display:flex;gap:8px}
     .hdr-btn{
-      display:flex;align-items:center;gap:5px;padding:8px 14px;border:none;
-      border-radius:20px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s
+      display:flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid var(--border);
+      border-radius:var(--r-pill);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--surface);color:var(--ink)
     }
-    .hdr-btn-yellow{background:var(--green);color:#fff}
-    .hdr-btn-ghost{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
-    .hdr-btn-red{background:var(--red-pale);color:var(--red);border:1.5px solid rgba(220,38,38,.15)}
+    .hdr-btn-yellow{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+    .hdr-btn-ghost{background:var(--surface);color:var(--ink-2);border:1px solid var(--border)}
+    .hdr-btn-red{background:var(--accent-soft);color:var(--accent-ink);border:1px solid transparent}
     .hdr-btn:hover{opacity:.9;transform:translateY(-1px)}
 
     /* ── SEARCH + FILTERS ── */
     #topbar{
       position:fixed;top:56px;left:0;right:0;z-index:999;
-      background:var(--surface);border-bottom:1px solid var(--gray-200)
+      background:var(--bg);border-bottom:1px solid var(--border)
     }
     .search-row{display:flex;gap:8px;padding:10px 14px;align-items:center}
-    .search-wrap{position:relative;flex:1}
-    .search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-500);font-size:14px}
-    #search-input{
-      width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--gray-200);
-      border-radius:20px;font-family:var(--font);font-size:14px;outline:none;
-      background:var(--surface3);color:var(--gray-900);transition:border-color .2s
+    .search-wrap{
+      flex:1;display:flex;align-items:center;gap:10px;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:var(--r-pill);padding:10px 14px;
+      box-shadow:var(--shadow-md)
     }
-    #search-input:focus{border-color:var(--green);background:#fff;box-shadow:0 0 0 3px var(--green-pale)}
+    .search-wrap svg{color:var(--ink-3);flex-shrink:0}
+    #search-input{
+      flex:1;border:none;outline:none;
+      font-family:var(--font);font-size:14px;
+      background:transparent;color:var(--ink)
+    }
+    #search-input::placeholder{color:var(--ink-4)}
+    #search-input:focus{}
 
     /* Location button */
     .btn-locate{
-      flex-shrink:0;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gray-200);
-      background:var(--surface3);cursor:pointer;display:flex;align-items:center;justify-content:center;
-      color:var(--blue);font-size:17px;transition:all .2s;position:relative
+      flex-shrink:0;width:42px;height:42px;border-radius:var(--r-pill);border:1px solid var(--border);
+      background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;
+      color:var(--ink-2);font-size:16px;transition:all .2s;position:relative;
+      box-shadow:var(--shadow-sm)
     }
-    .btn-locate:hover{border-color:var(--blue);background:var(--blue-pale)}
-    .btn-locate.loading{border-color:var(--blue);background:var(--blue-pale)}
-    .btn-locate.loading i{animation:spin 1s linear infinite}
-    .btn-locate.active{border-color:var(--green);background:var(--green-pale);color:var(--green)}
+    .btn-locate:hover{border-color:var(--border-strong);color:var(--ink)}
+    .btn-locate.loading{border-color:var(--ink);color:var(--ink)}
+    .btn-locate.loading svg{animation:spin 1s linear infinite}
+    .btn-locate.active{border-color:var(--ink);background:var(--ink);color:white}
     @keyframes spin{to{transform:rotate(360deg)}}
     .locate-tip{
       position:absolute;top:calc(100% + 6px);right:0;white-space:nowrap;
-      background:var(--gray-900);color:#fff;font-size:11px;padding:4px 10px;
-      border-radius:8px;pointer-events:none;opacity:0;transition:opacity .2s;
+      background:var(--ink);color:#fff;font-size:11px;padding:4px 10px;
+      border-radius:var(--r-sm);pointer-events:none;opacity:0;transition:opacity .2s;
       font-family:var(--font)
     }
     .btn-locate:hover .locate-tip{opacity:1}
@@ -88,13 +144,14 @@
     }
     .filter-row::-webkit-scrollbar{display:none}
     .chip{
-      flex-shrink:0;padding:5px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
-      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
-      color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s
+      flex-shrink:0;padding:7px 13px;border-radius:var(--r-pill);border:1px solid var(--border);
+      background:var(--surface);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;
+      color:var(--ink-2);display:flex;align-items:center;gap:5px;transition:all .15s;
+      white-space:nowrap;box-shadow:var(--shadow-sm)
     }
-    .chip:hover{border-color:var(--green);color:var(--green)}
-    .chip.on{background:var(--green);border-color:var(--green);color:#fff}
-    .dot{width:8px;height:8px;border-radius:50%}
+    .chip:hover{border-color:var(--border-strong);color:var(--ink)}
+    .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--border-strong)}
 
     /* ── LAYOUT ── */
     #app{position:fixed;top:148px;left:0;right:0;bottom:0;display:flex}
@@ -104,335 +161,342 @@
     #map{width:100%;height:100%}
     .map-legend{
       position:absolute;bottom:16px;left:12px;z-index:900;
-      background:var(--surface);border-radius:10px;padding:9px 12px;box-shadow:var(--shadow);font-size:11px
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+      padding:9px 12px;box-shadow:var(--shadow-md);font-size:11px
     }
-    .legend-title{font-weight:700;color:var(--gray-700);margin-bottom:5px}
-    .leg-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;color:var(--gray-700)}
-    .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .legend-title{font-weight:600;color:var(--ink-2);margin-bottom:5px}
+    .leg-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;color:var(--ink-2)}
+    .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
     /* ── SIDEBAR ── */
     #sidebar{
       width:380px;flex-shrink:0;background:var(--surface);
-      border-left:1px solid var(--gray-200);
+      border-left:1px solid var(--border);
       display:flex;flex-direction:column;min-width:0
     }
     .sb-head{
-      padding:12px 14px 8px;border-bottom:1px solid var(--gray-200);
+      padding:12px 14px 8px;border-bottom:1px solid var(--border);
       display:flex;align-items:center;justify-content:space-between;flex-shrink:0
     }
-    .sb-title{font-size:13px;font-weight:600;color:var(--gray-700)}
-    .cnt-pill{background:var(--green-pale);color:var(--green);padding:2px 9px;border-radius:10px;font-size:12px;font-weight:600}
-    .sort-row{display:flex;gap:5px;padding:6px 14px 8px;border-bottom:1px solid var(--gray-100);flex-shrink:0}
-    .sort-lbl{font-size:11px;color:var(--gray-500);margin-right:2px;align-self:center}
+    .sb-title{font-size:13px;font-weight:600;color:var(--ink-2)}
+    .cnt-pill{background:var(--surface-3);color:var(--ink-2);padding:2px 9px;border-radius:var(--r-pill);font-size:12px;font-weight:500;border:1px solid var(--border)}
+    .sort-row{display:flex;gap:5px;padding:6px 14px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+    .sort-lbl{font-size:11px;color:var(--ink-3);margin-right:2px;align-self:center}
     .sort-btn{
-      font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;
-      border:1px solid var(--gray-200);background:var(--surface3);cursor:pointer;font-family:var(--font);
-      color:var(--gray-700);transition:all .1s
+      font-size:11px;font-weight:500;padding:4px 10px;border-radius:var(--r-pill);
+      border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:var(--font);
+      color:var(--ink-2);transition:all .1s
     }
-    .sort-btn.on{background:var(--green);color:#fff;border-color:var(--green)}
+    .sort-btn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
     #shop-list{flex:1;overflow-y:auto;padding:8px}
-    #shop-list::-webkit-scrollbar{width:3px}
-    #shop-list::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px}
+    #shop-list::-webkit-scrollbar{width:4px}
+    #shop-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px}
 
     /* ── SHOP CARD ── */
     .shop-card{
-      background:var(--surface2);border:1.5px solid var(--gray-200);border-radius:var(--radius);
-      margin-bottom:8px;cursor:pointer;transition:all .15s;overflow:hidden
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+      margin-bottom:8px;cursor:pointer;transition:all .15s;overflow:hidden;
+      box-shadow:var(--shadow-sm)
     }
-    .shop-card:hover{border-color:var(--green);box-shadow:var(--shadow);transform:translateY(-1px)}
-    .shop-card.sel{border-color:var(--green);box-shadow:0 0 0 3px rgba(46,125,50,.15)}
-    .card-img-wrap{width:100%;aspect-ratio:4/3;overflow:hidden;background:var(--gray-100);flex-shrink:0}
+    .shop-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+    .shop-card.sel{border-color:var(--ink);box-shadow:0 0 0 2px oklch(0.2 0.01 70 / 0.12)}
+    .card-img-wrap{width:100%;aspect-ratio:4/3;overflow:hidden;background:var(--surface-3);flex-shrink:0}
     .card-img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
     .card-body{padding:11px 12px}
     .card-row1{display:flex;gap:9px;margin-bottom:7px}
     .cat-icon{
-      width:34px;height:34px;border-radius:8px;flex-shrink:0;
-      display:flex;align-items:center;justify-content:center;font-size:15px
+      width:34px;height:34px;border-radius:var(--r-sm);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;font-size:15px;
+      background:var(--surface-3);border:1px solid var(--border)
     }
     .card-mid{flex:1;min-width:0}
-    .card-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .card-loc{font-size:11px;color:var(--gray-500);display:flex;align-items:center;gap:3px;margin-top:1px}
+    .card-name{font-size:15px;font-weight:600;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-loc{font-size:11px;color:var(--ink-3);display:flex;align-items:center;gap:3px;margin-top:1px}
     .card-r{text-align:right;flex-shrink:0}
-    .card-price{font-size:14px;font-weight:700;color:var(--green)}
-    .card-price small{font-size:10px;font-weight:400;color:var(--gray-500)}
+    .card-price{font-size:13px;font-weight:600;color:var(--ink)}
+    .card-price small{font-size:10px;font-weight:400;color:var(--ink-3)}
     .mini-stars{display:flex;gap:1px;justify-content:flex-end;margin-top:1px}
-    .mini-stars i{font-size:10px;color:var(--yellow-dark)}
+    .mini-stars i{font-size:10px;color:var(--accent)}
     .dist-pill{
-      font-size:10px;font-weight:600;color:var(--blue);background:var(--blue-pale);
-      padding:1px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:2px;margin-top:2px
+      font-size:10px;font-weight:500;color:var(--ink-2);background:var(--surface-3);
+      padding:2px 7px;border-radius:var(--r-pill);border:1px solid var(--border);
+      display:inline-flex;align-items:center;gap:2px;margin-top:2px
     }
     .value-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-    .val-label{font-size:11px;color:var(--gray-500);width:52px}
-    .val-bar{flex:1;height:4px;background:var(--gray-200);border-radius:2px;overflow:hidden}
-    .val-fill{height:100%;background:linear-gradient(90deg,var(--yellow-dark),var(--green));border-radius:2px}
-    .card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid var(--gray-100)}
-    .gov-pill{font-size:10px;font-weight:600;color:#6A1B9A;background:#F3E5F5;padding:2px 7px;border-radius:6px}
+    .val-label{font-size:11px;color:var(--ink-3);width:52px}
+    .val-bar{flex:1;height:3px;background:var(--surface-3);border-radius:999px;overflow:hidden}
+    .val-fill{height:100%;background:var(--accent);border-radius:999px}
+    .card-foot{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid var(--border)}
     .foot-btns{display:flex;gap:5px}
     .btn-xs{
-      padding:4px 9px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font);
-      font-size:10px;font-weight:600;display:flex;align-items:center;gap:2px;transition:all .15s
+      padding:4px 9px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer;font-family:var(--font);
+      font-size:10px;font-weight:500;display:flex;align-items:center;gap:2px;transition:all .15s;background:var(--surface)
     }
-    .btn-share{background:var(--gray-100);color:var(--gray-700)}
-    .btn-share:hover{background:var(--gray-200)}
-    .btn-flag{background:var(--red-pale);color:var(--red)}
-    .btn-flag:hover{background:var(--red);color:#fff}
+    .btn-share{color:var(--ink-2)}
+    .btn-share:hover{background:var(--surface-2);border-color:var(--border-strong)}
+    .btn-flag{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}
+    .btn-flag:hover{background:var(--accent);color:white;border-color:var(--accent)}
 
     /* ── POPUP ── */
-    .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden;background:#fff!important;color:var(--gray-900)!important}
-    .leaflet-popup-tip{background:#fff!important}
+    .leaflet-popup-content-wrapper{border-radius:var(--r-md)!important;box-shadow:var(--shadow-lg)!important;padding:0!important;overflow:hidden;background:var(--surface)!important;color:var(--ink)!important;border:1px solid var(--border)}
+    .leaflet-popup-tip{background:var(--surface)!important}
     .leaflet-popup-content{margin:0!important;min-width:210px}
     .pop-img{width:100%;height:110px;object-fit:cover;display:block}
     .pop-body{padding:10px 12px;background:var(--surface)}
-    .pop-name{font-family:var(--font);font-size:13px;font-weight:700;margin-bottom:2px;color:var(--gray-900)}
-    .pop-price{font-family:var(--font);font-size:15px;font-weight:800;color:var(--green)}
-    .pop-loc{font-family:var(--font);font-size:11px;color:var(--gray-500)}
+    .pop-name{font-family:var(--font);font-size:13px;font-weight:600;margin-bottom:2px;color:var(--ink)}
+    .pop-price{font-family:var(--font);font-size:15px;font-weight:700;color:var(--ink)}
+    .pop-loc{font-family:var(--font);font-size:11px;color:var(--ink-3)}
     .pop-btn{
-      display:block;width:100%;background:var(--green);color:#fff;border:none;
+      display:block;width:100%;background:var(--ink);color:#fff;border:none;
       padding:9px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer
     }
-    .pop-btn:hover{background:var(--green-light)}
+    .pop-btn:hover{background:oklch(0.1 0.01 70)}
 
     /* My location marker */
     .my-dot{
-      width:18px;height:18px;border-radius:50%;background:var(--blue);
-      border:3px solid #fff;box-shadow:0 0 0 4px rgba(30,136,229,.3)
+      width:16px;height:16px;border-radius:50%;background:oklch(0.55 0.18 250);
+      border:3px solid #fff;box-shadow:0 0 0 4px oklch(0.55 0.18 250 / 0.25)
     }
 
     /* ── MODAL BASE ── */
     .overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;
+      position:fixed;inset:0;background:oklch(0 0 0 / 0.45);z-index:2000;
       display:flex;align-items:flex-end;justify-content:center;
       opacity:0;pointer-events:none;transition:opacity .25s
     }
     .overlay.open{opacity:1;pointer-events:all}
     .modal{
-      background:var(--surface);width:100%;max-width:620px;border-radius:20px 20px 0 0;
+      background:var(--surface);width:100%;max-width:620px;border-radius:22px 22px 0 0;
+      border:1px solid var(--border);
       padding:18px 20px 24px;max-height:92vh;overflow-y:auto;
       transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-      position:relative
+      position:relative;box-shadow:var(--shadow-lg)
     }
     .overlay.open .modal{transform:translateY(0)}
-    .modal-handle{width:36px;height:4px;background:var(--gray-200);border-radius:2px;margin:0 auto 14px}
+    .modal-handle{width:36px;height:4px;background:var(--border-strong);border-radius:999px;margin:0 auto 14px}
     .modal-close{
       position:sticky;top:0;float:right;margin-right:-4px;margin-bottom:-34px;
-      width:34px;height:34px;border-radius:50%;z-index:10;
-      background:var(--surface3);border:none;cursor:pointer;font-size:15px;
-      color:var(--gray-700);display:flex;align-items:center;justify-content:center;
-      box-shadow:0 1px 4px rgba(0,0,0,.12)
+      width:34px;height:34px;border-radius:var(--r-pill);z-index:10;
+      background:var(--surface-2);border:1px solid var(--border);cursor:pointer;font-size:14px;
+      color:var(--ink-2);display:flex;align-items:center;justify-content:center;
+      box-shadow:var(--shadow-sm)
     }
-    .modal-close:hover{background:var(--gray-300)}
+    .modal-close:hover{background:var(--surface-3);color:var(--ink)}
     @media(min-width:768px){
       .overlay{align-items:center}
-      .modal{border-radius:20px;max-height:88vh}
+      .modal{border-radius:var(--r-lg);max-height:88vh}
     }
 
     /* ── DETAIL ── */
-    .det-cover-wrap{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;cursor:pointer}
+    .det-cover-wrap{position:relative;border-radius:var(--r-md);overflow:hidden;margin-bottom:8px;cursor:pointer}
     .det-cover-wrap:hover .det-cover-overlay{opacity:1}
     .det-cover{width:100%;aspect-ratio:16/9;object-fit:cover;object-position:center;display:block}
-    .det-cover-overlay{position:absolute;inset:0;background:rgba(0,0,0,.18);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center}
+    .det-cover-overlay{position:absolute;inset:0;background:oklch(0 0 0 / 0.18);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center}
     .det-cover-overlay i{color:#fff;font-size:28px}
-    .gal-count-pill{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:3px 9px;border-radius:12px;font-family:var(--font);pointer-events:none}
+    .gal-count-pill{position:absolute;bottom:8px;right:8px;background:oklch(0 0 0 / 0.55);color:#fff;font-size:11px;font-weight:500;padding:4px 10px;border-radius:var(--r-pill);font-family:var(--font);pointer-events:none}
     /* Image strip */
     .img-strip{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
     .img-strip::-webkit-scrollbar{display:none}
-    .img-strip-item{flex-shrink:0;width:64px;height:48px;border-radius:7px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:all .15s;opacity:.7}
+    .img-strip-item{flex-shrink:0;width:64px;height:48px;border-radius:var(--r-sm);overflow:hidden;border:2px solid transparent;cursor:pointer;transition:all .15s;opacity:.7}
     .img-strip-item img{width:100%;height:100%;object-fit:cover;display:block}
-    .img-strip-item:hover,.img-strip-item.on{border-color:var(--green);opacity:1}
+    .img-strip-item:hover,.img-strip-item.on{border-color:var(--ink);opacity:1}
     .det-hdr{display:flex;gap:11px;align-items:flex-start;margin-bottom:12px}
-    .det-icon{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
-    .det-name{font-size:19px;font-weight:800;margin-bottom:2px}
-    .det-loc{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:3px}
+    .det-icon{width:46px;height:46px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;background:var(--surface-3);border:1px solid var(--border)}
+    .det-name{font-size:20px;font-weight:600;letter-spacing:-0.4px;margin-bottom:2px}
+    .det-loc{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:3px}
     .det-price-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-    .det-price{font-size:26px;font-weight:800;color:var(--green)}
-    .det-price small{font-size:13px;color:var(--gray-500);font-weight:400}
+    .det-price{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:-0.5px}
+    .det-price small{font-size:13px;color:var(--ink-3);font-weight:400}
     .det-stars{display:flex;align-items:center;gap:3px}
-    .det-stars i{font-size:14px;color:var(--yellow-dark)}
-    .det-stars span{font-size:12px;color:var(--gray-500);margin-left:3px}
+    .det-stars i{font-size:14px;color:var(--accent)}
+    .det-stars span{font-size:12px;color:var(--ink-3);margin-left:3px}
     .sec{margin-bottom:14px}
-    .sec-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);margin-bottom:7px}
+    .sec-t{font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--ink-3);margin-bottom:7px}
     .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-    .info-box{background:var(--surface3);border-radius:8px;padding:9px}
-    .info-lbl{font-size:11px;color:var(--gray-500);margin-bottom:2px}
+    .info-box{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px}
+    .info-lbl{font-size:11px;color:var(--ink-3);margin-bottom:2px}
     .info-val{font-size:13px;font-weight:600}
 
     /* Menu scroll */
     .menu-scroll{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
     .menu-scroll::-webkit-scrollbar{display:none}
     .menu-card{flex-shrink:0;width:110px}
-    .menu-img{width:110px;height:80px;object-fit:cover;border-radius:9px;display:block;background:var(--gray-100)}
-    .menu-name{font-size:11px;font-weight:600;margin-top:3px;text-align:center;color:var(--gray-700)}
-    .menu-price{font-size:11px;color:var(--green);font-weight:700;text-align:center}
+    .menu-img{width:110px;height:80px;object-fit:cover;border-radius:var(--r-sm);display:block;background:var(--surface-3)}
+    .menu-name{font-size:11px;font-weight:500;margin-top:3px;text-align:center;color:var(--ink-2)}
+    .menu-price{font-size:11px;color:var(--ink);font-weight:600;text-align:center}
 
     /* Reviews */
-    .rev-item{background:var(--surface3);border-radius:9px;padding:10px;margin-bottom:7px}
+    .rev-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:10px;margin-bottom:7px}
     .rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
     .rev-name{font-size:12px;font-weight:600}
     .rev-stars{display:flex;gap:1px}
-    .rev-stars i{font-size:9px;color:var(--yellow-dark)}
-    .rev-text{font-size:12px;color:var(--gray-700);line-height:1.5}
-    .rev-date{font-size:10px;color:var(--gray-500);margin-top:3px}
-    .rev-form{background:var(--green-pale);border-radius:9px;padding:11px;margin-top:8px}
-    .rev-form-t{font-size:13px;font-weight:600;color:var(--green);margin-bottom:7px}
+    .rev-stars i{font-size:9px;color:var(--accent)}
+    .rev-text{font-size:12px;color:var(--ink-2);line-height:1.55}
+    .rev-date{font-size:10px;color:var(--ink-4);margin-top:3px}
+    .rev-form{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-top:8px}
+    .rev-form-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
     .star-pick{display:flex;gap:4px;margin-bottom:7px}
-    .star-pick i{font-size:22px;color:var(--gray-300);cursor:pointer;transition:color .1s}
-    .star-pick i.on{color:var(--yellow-dark)}
+    .star-pick i{font-size:22px;color:var(--border-strong);cursor:pointer;transition:color .1s}
+    .star-pick i.on{color:var(--accent)}
 
-    .det-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-100)}
+    .det-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
     .act-btn{
-      flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-family:var(--font);
-      font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s
+      flex:1;padding:10px;border-radius:var(--r-md);border:1px solid var(--border);cursor:pointer;font-family:var(--font);
+      font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;background:var(--surface)
     }
-    .act-green{background:var(--green);color:#fff}
-    .act-green:hover{background:var(--green-light)}
-    .act-gray{background:var(--gray-100);color:var(--gray-700)}
-    .act-gray:hover{background:var(--gray-200)}
-    .act-red{background:var(--red-pale);color:var(--red)}
-    .act-red:hover{background:var(--red);color:#fff}
+    .act-green{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .act-green:hover{background:oklch(0.1 0.01 70)}
+    .act-gray{background:var(--surface-2);color:var(--ink-2);border-color:var(--border)}
+    .act-gray:hover{background:var(--surface-3);border-color:var(--border-strong)}
+    .act-red{background:var(--accent-soft);color:var(--accent-ink);border-color:transparent}
+    .act-red:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
     .btn-wongnai{
       display:inline-flex;align-items:center;gap:6px;padding:8px 14px;
-      background:#FF5722;color:#fff;border:none;border-radius:8px;
+      background:#FF5722;color:#fff;border:none;border-radius:var(--r-sm);
       font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none
     }
 
     /* ── ADD FORM ── */
     .form-g{margin-bottom:13px}
-    .form-lbl{font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:5px;display:block}
-    .req{color:var(--red);margin-left:2px}
+    .form-lbl{font-size:12px;font-weight:500;color:var(--ink-2);margin-bottom:6px;display:block;letter-spacing:0.01em}
+    .req{color:var(--danger);margin-left:2px}
     .form-inp,.form-sel,.form-ta{
-      width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;
-      font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;
-      color:var(--gray-900);background:var(--surface3)
+      width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:10px;
+      font-family:var(--font);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s;
+      color:var(--ink);background:var(--surface)
     }
-    .form-inp:focus,.form-sel:focus,.form-ta:focus{border-color:var(--green)}
+    .form-inp:focus,.form-sel:focus,.form-ta:focus{border-color:var(--ink);box-shadow:0 0 0 3px oklch(0 0 0 / 0.06)}
     .form-ta{resize:vertical;min-height:70px}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
     /* Star picker for value */
     .val-pick{display:flex;gap:6px;margin-top:4px}
-    .val-pick i{font-size:26px;color:var(--gray-300);cursor:pointer;transition:color .1s}
-    .val-pick i.on{color:var(--yellow-dark)}
+    .val-pick i{font-size:26px;color:var(--border-strong);cursor:pointer;transition:color .1s}
+    .val-pick i.on{color:var(--accent)}
 
     /* Map pin picker */
     #pin-map{
-      width:100%;height:260px;border-radius:10px;border:1.5px solid var(--gray-200);
+      width:100%;height:260px;border-radius:var(--r-md);border:1px solid var(--border);
       margin-top:6px;cursor:crosshair;z-index:1;transition:height .3s
     }
     #pin-map.expanded{height:420px}
     .pin-map-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
     .btn-expand-map{
-      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
-      border:1px solid var(--gray-200);background:var(--surface3);cursor:pointer;
-      font-family:var(--font);font-size:12px;color:var(--gray-700);transition:all .15s
+      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--r-sm);
+      border:1px solid var(--border);background:var(--surface);cursor:pointer;
+      font-family:var(--font);font-size:12px;color:var(--ink-2);transition:all .15s
     }
-    .btn-expand-map:hover{border-color:var(--green);color:var(--green)}
-    .pin-status{font-size:12px;color:var(--gray-500);margin-top:4px;display:flex;align-items:center;gap:4px}
-    .pin-status.set{color:var(--green)}
+    .btn-expand-map:hover{border-color:var(--border-strong);color:var(--ink)}
+    .pin-status{font-size:12px;color:var(--ink-3);margin-top:4px;display:flex;align-items:center;gap:4px}
+    .pin-status.set{color:var(--success)}
 
     /* Image upload */
     .upload-zone{
-      border:2px dashed var(--gray-300);border-radius:10px;padding:20px;text-align:center;
-      cursor:pointer;transition:all .15s;background:var(--surface3)
+      border:1.5px dashed var(--border-strong);border-radius:var(--r-md);padding:20px;text-align:center;
+      cursor:pointer;transition:all .15s;background:var(--surface)
     }
-    .upload-zone:hover{border-color:var(--green);background:var(--green-pale)}
-    .upload-zone.drag{border-color:var(--green);background:var(--green-pale)}
-    .upload-icon{font-size:28px;margin-bottom:6px;color:var(--gray-400)}
-    .upload-text{font-size:13px;color:var(--gray-500)}
-    .upload-text strong{color:var(--green)}
+    .upload-zone:hover{border-color:var(--ink);background:var(--surface-2)}
+    .upload-zone.drag{border-color:var(--ink);background:var(--surface-2)}
+    .upload-icon{font-size:28px;margin-bottom:6px;color:var(--ink-4)}
+    .upload-text{font-size:13px;color:var(--ink-3)}
+    .upload-text strong{color:var(--ink)}
     .preview-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
     .preview-thumb{
-      position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;
-      border:1.5px solid var(--gray-200)
+      position:relative;width:72px;height:72px;border-radius:var(--r-sm);overflow:hidden;
+      border:1px solid var(--border)
     }
     .preview-thumb img{width:100%;height:100%;object-fit:cover}
     .preview-rm{
       position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
-      background:rgba(0,0,0,.6);color:#fff;border:none;font-size:9px;cursor:pointer;
+      background:oklch(0 0 0 / 0.6);color:#fff;border:none;font-size:9px;cursor:pointer;
       display:flex;align-items:center;justify-content:center
     }
 
     /* Submit btn */
     .btn-submit{
-      width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:10px;
-      font-family:var(--font);font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .15s
+      width:100%;padding:14px;background:var(--ink);color:#fff;border:none;border-radius:var(--r-md);
+      font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:6px;transition:background .15s
     }
-    .btn-submit:hover{background:var(--green-light)}
+    .btn-submit:hover{background:oklch(0.1 0.01 70)}
     .success-box{text-align:center;padding:20px 0;display:none}
     .suc-icon{font-size:44px;margin-bottom:10px}
-    .suc-title{font-size:19px;font-weight:800;color:var(--green);margin-bottom:6px}
-    .suc-text{font-size:13px;color:var(--gray-700)}
+    .suc-title{font-size:19px;font-weight:700;color:var(--success);margin-bottom:6px}
+    .suc-text{font-size:13px;color:var(--ink-2)}
 
     /* ── ADMIN ── */
     #admin-modal .modal{max-width:680px}
-    .adm-tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:14px}
+    .adm-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px}
     .adm-tab{
       flex:1;padding:9px;border:none;background:transparent;font-family:var(--font);
-      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
-      border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s
+      font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-3);
+      border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s
     }
-    .adm-tab.on{color:var(--green);border-bottom-color:var(--green)}
-    .adm-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:3px}
+    .adm-tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+    .adm-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:var(--r-pill);margin-left:3px}
     .adm-sec{display:none}
     .adm-sec.on{display:block}
     .adm-row{
       display:flex;gap:10px;align-items:flex-start;padding:10px;
-      border:1px solid var(--gray-200);border-radius:9px;margin-bottom:7px;
-      background:var(--surface3)
+      border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:7px;
+      background:var(--surface)
     }
-    .adm-thumb{width:56px;height:56px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
+    .adm-thumb{width:56px;height:56px;border-radius:var(--r-sm);object-fit:cover;flex-shrink:0;background:var(--surface-3)}
     .adm-info{flex:1;min-width:0}
-    .adm-name{font-size:13px;font-weight:700;margin-bottom:2px}
-    .adm-meta{font-size:11px;color:var(--gray-500)}
+    .adm-name{font-size:13px;font-weight:600;margin-bottom:2px}
+    .adm-meta{font-size:11px;color:var(--ink-3)}
     .adm-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
-    .st-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;display:inline-block;margin-left:4px}
-    .st-ok{background:var(--green-pale);color:var(--green)}
-    .st-wait{background:var(--yellow-pale);color:#E65100}
-    .st-rep{background:var(--red-pale);color:var(--red)}
-    .btn-ok{background:var(--green-pale);color:var(--green);border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
-    .btn-ok:hover{background:var(--green);color:#fff}
-    .btn-no{background:var(--red-pale);color:var(--red);border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
-    .btn-no:hover{background:var(--red);color:#fff}
-    .btn-ed{background:var(--yellow-pale);color:#E65100;border:none;padding:5px 11px;border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .st-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);display:inline-block;margin-left:4px}
+    .st-ok{background:oklch(0.96 0.04 155);color:oklch(0.38 0.13 155)}
+    .st-wait{background:oklch(0.97 0.03 75);color:oklch(0.5 0.12 75)}
+    .st-rep{background:var(--accent-soft);color:var(--accent-ink)}
+    .btn-ok{background:oklch(0.96 0.04 155);color:oklch(0.38 0.13 155);border:none;padding:5px 11px;border-radius:var(--r-sm);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .btn-ok:hover{background:var(--success);color:#fff}
+    .btn-no{background:var(--accent-soft);color:var(--accent-ink);border:none;padding:5px 11px;border-radius:var(--r-sm);font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer}
+    .btn-no:hover{background:var(--danger);color:#fff}
+    .btn-ed{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border);padding:5px 11px;border-radius:var(--r-sm);font-family:var(--font);font-size:11px;font-weight:500;cursor:pointer}
     .adm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-    .stat-box{background:var(--surface3);border-radius:9px;padding:11px;text-align:center}
-    .stat-n{font-size:22px;font-weight:800;color:var(--green)}
-    .stat-l{font-size:11px;color:var(--gray-500)}
-    .empty-msg{text-align:center;padding:20px;color:var(--gray-500);font-size:13px}
+    .stat-box{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:11px;text-align:center}
+    .stat-n{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-0.5px}
+    .stat-l{font-size:11px;color:var(--ink-3)}
+    .empty-msg{text-align:center;padding:20px;color:var(--ink-3);font-size:13px}
 
     /* Admin login */
     .pw-wrap{text-align:center;padding:10px 0 14px}
 
     /* ── MOBILE ── */
     #mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:1000;
-      background:var(--surface);border-top:1px solid var(--gray-200);height:58px}
+      background:var(--surface);border-top:1px solid var(--border);height:68px;
+      padding-bottom:env(safe-area-inset-bottom,0)}
     .mnav{display:flex;height:100%}
     .mnav-btn{
       flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:2px;border:none;background:transparent;font-family:var(--font);color:var(--gray-500);
+      gap:3px;border:none;background:transparent;font-family:var(--font);color:var(--ink-4);
       font-size:10px;font-weight:500;cursor:pointer;transition:color .15s
     }
-    .mnav-btn i{font-size:18px}
-    .mnav-btn.on{color:var(--green)}
+    .mnav-btn svg{width:22px;height:22px;stroke:currentColor}
+    .mnav-btn.on{color:var(--ink);font-weight:600}
     .mnav-add .add-circle{
-      width:42px;height:42px;background:var(--green);border-radius:50%;
-      display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;
-      box-shadow:0 4px 12px rgba(46,125,50,.4)
+      width:44px;height:44px;background:var(--ink);border-radius:var(--r-pill);
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;
+      box-shadow:var(--shadow-lg)
     }
 
     /* ── TOAST ── */
     #toast{
-      position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(16px);
-      background:var(--gray-900);color:#fff;padding:9px 18px;border-radius:20px;
-      font-size:13px;font-weight:600;z-index:4000;opacity:0;transition:all .3s;
+      position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);
+      background:var(--surface);color:var(--ink);padding:9px 18px;
+      border-radius:var(--r-pill);border:1px solid var(--border);
+      box-shadow:var(--shadow-lg);
+      font-size:13px;font-weight:500;z-index:4000;opacity:0;transition:all .3s;
       pointer-events:none;white-space:nowrap;font-family:var(--font)
     }
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-    .no-results{text-align:center;padding:36px 16px;color:var(--gray-500)}
-    .no-results i{font-size:36px;margin-bottom:10px;color:var(--gray-300);display:block}
+    .no-results{text-align:center;padding:36px 16px;color:var(--ink-3)}
+    .no-results i{font-size:36px;margin-bottom:10px;color:var(--border-strong);display:block}
 
     @media(max-width:767px){
-      #app{top:148px;bottom:58px}
+      #app{top:148px;bottom:68px}
       #sidebar{width:100%;border-left:none;display:none}
       #sidebar.mob-on{display:flex;position:absolute;inset:0;z-index:10}
       #map-wrap.mob-off{display:none}
@@ -445,156 +509,158 @@
 
     /* ── PRICE FILTER MODAL ── */
     #filter-modal .modal{max-width:480px}
-    .filter-modal-title{font-size:22px;font-weight:800;margin-bottom:4px}
-    .filter-modal-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px}
+    .filter-modal-title{font-size:20px;font-weight:600;letter-spacing:-0.4px;margin-bottom:4px}
+    .filter-modal-sub{font-size:13px;color:var(--ink-3);margin-bottom:20px}
 
     /* Dual range slider */
-    .range-wrap{background:var(--surface3);border-radius:12px;padding:16px 18px;margin-bottom:20px}
+    .range-wrap{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 18px;margin-bottom:20px}
     .range-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .range-label-text{font-size:14px;font-weight:600;color:var(--gray-700)}
-    .range-val-badge{font-size:14px;font-weight:700;color:var(--green)}
-    .slider-track{position:relative;height:6px;background:var(--gray-200);border-radius:3px;margin:8px 0 4px}
-    .slider-range{position:absolute;height:100%;background:var(--green);border-radius:3px}
+    .range-label-text{font-size:14px;font-weight:600;color:var(--ink)}
+    .range-val-badge{font-size:14px;font-weight:600;color:var(--ink)}
+    .slider-track{position:relative;height:4px;background:var(--surface-3);border-radius:999px;margin:8px 0 4px}
+    .slider-range{position:absolute;height:100%;background:var(--ink);border-radius:999px}
     .range-input{position:absolute;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;top:0;left:0}
-    .range-thumb{position:absolute;width:22px;height:22px;background:#fff;border:2.5px solid var(--green);
+    .range-thumb{position:absolute;width:20px;height:20px;background:#fff;border:2px solid var(--ink);
       border-radius:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
-      box-shadow:0 2px 6px rgba(0,0,0,.18);transition:border-color .15s}
-    .range-minmax{display:flex;justify-content:space-between;font-size:11px;color:var(--gray-500);margin-top:8px}
+      box-shadow:var(--shadow-sm);transition:border-color .15s}
+    .range-minmax{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);margin-top:8px}
     .dual-slider{position:relative;height:24px;margin:4px 0}
     .dual-slider input[type=range]{
-      position:absolute;width:100%;height:6px;top:50%;transform:translateY(-50%);
+      position:absolute;width:100%;height:4px;top:50%;transform:translateY(-50%);
       -webkit-appearance:none;appearance:none;background:transparent;pointer-events:none;
       outline:none;margin:0
     }
     .dual-slider input[type=range]::-webkit-slider-thumb{
-      -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
-      background:#fff;border:2.5px solid var(--green);cursor:pointer;pointer-events:all;
-      box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .1s
+      -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);cursor:pointer;pointer-events:all;
+      box-shadow:var(--shadow-sm);transition:transform .1s
     }
     .dual-slider input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
     .dual-slider input[type=range]::-moz-range-thumb{
-      width:22px;height:22px;border-radius:50%;background:#fff;
-      border:2.5px solid var(--green);cursor:pointer;pointer-events:all;box-shadow:0 2px 6px rgba(0,0,0,.18)
+      width:20px;height:20px;border-radius:50%;background:#fff;
+      border:2px solid var(--ink);cursor:pointer;pointer-events:all;box-shadow:var(--shadow-sm)
     }
     .slider-bg{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
-      height:6px;background:var(--gray-200);border-radius:3px;pointer-events:none}
-    .slider-fill{position:absolute;top:50%;transform:translateY(-50%);height:6px;
-      background:var(--green);border-radius:3px;pointer-events:none}
+      height:4px;background:var(--surface-3);border-radius:999px;pointer-events:none}
+    .slider-fill{position:absolute;top:50%;transform:translateY(-50%);height:4px;
+      background:var(--ink);border-radius:999px;pointer-events:none}
 
     /* Food type chips */
     .food-chips-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
     .food-chip{
-      padding:8px 14px;border-radius:20px;border:1.5px solid var(--gray-200);
-      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:500;
-      color:var(--gray-700);display:flex;align-items:center;gap:5px;transition:all .15s;
+      padding:7px 13px;border-radius:var(--r-pill);border:1px solid var(--border);
+      background:var(--surface);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;
+      color:var(--ink-2);display:flex;align-items:center;gap:5px;transition:all .15s;
       user-select:none
     }
-    .food-chip:hover{border-color:var(--green);color:var(--green)}
-    .food-chip.on{background:var(--green);border-color:var(--green);color:#fff}
-    .food-chip.on:hover{background:var(--green-light)}
-    .food-type-note{font-size:12px;color:var(--gray-500);margin-top:8px}
-    .food-type-note span{color:var(--green);font-weight:600}
+    .food-chip:hover{border-color:var(--border-strong);color:var(--ink)}
+    .food-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+    .food-chip.on:hover{opacity:.9}
+    .food-type-note{font-size:12px;color:var(--ink-3);margin-top:8px}
+    .food-type-note span{color:var(--ink);font-weight:600}
 
     /* Filter apply btn */
     .btn-apply-filter{
-      width:100%;padding:14px;background:var(--gray-900);color:#fff;border:none;
-      border-radius:12px;font-family:var(--font);font-size:16px;font-weight:700;
+      width:100%;padding:14px;background:var(--ink);color:#fff;border:none;
+      border-radius:var(--r-md);font-family:var(--font);font-size:15px;font-weight:600;
       cursor:pointer;margin-top:16px;transition:background .15s;display:flex;
       align-items:center;justify-content:center;gap:8px
     }
-    .btn-apply-filter:hover{background:#333}
+    .btn-apply-filter:hover{background:oklch(0.1 0.01 70)}
     .btn-reset-filter{
-      width:100%;padding:10px;background:transparent;color:var(--gray-500);border:1.5px solid var(--gray-200);
-      border-radius:12px;font-family:var(--font);font-size:14px;font-weight:600;
+      width:100%;padding:10px;background:transparent;color:var(--ink-3);border:1px solid var(--border);
+      border-radius:var(--r-md);font-family:var(--font);font-size:14px;font-weight:500;
       cursor:pointer;margin-top:8px;transition:all .15s
     }
-    .btn-reset-filter:hover{border-color:var(--red);color:var(--red)}
+    .btn-reset-filter:hover{border-color:var(--danger);color:var(--danger)}
 
     /* Filter active indicator */
     .filter-active-dot{
-      width:7px;height:7px;border-radius:50%;background:var(--red);
+      width:6px;height:6px;border-radius:50%;background:var(--accent);
       display:inline-block;margin-left:4px;vertical-align:middle
     }
     .btn-filter-open{
-      flex-shrink:0;display:flex;align-items:center;gap:5px;padding:5px 12px;
-      border-radius:20px;border:1.5px solid var(--gray-200);background:var(--surface3);
-      cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;
-      color:var(--gray-700);transition:all .15s;white-space:nowrap
+      flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 13px;
+      border-radius:var(--r-pill);border:1px solid var(--border);background:var(--surface);
+      cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;
+      color:var(--ink-2);transition:all .15s;white-space:nowrap;box-shadow:var(--shadow-sm)
     }
-    .btn-filter-open:hover{border-color:var(--green);color:var(--green)}
-    .btn-filter-open.active{border-color:var(--green);color:var(--green);background:var(--green-pale)}
+    .btn-filter-open:hover{border-color:var(--border-strong);color:var(--ink)}
+    .btn-filter-open.active{border-color:var(--ink);color:var(--ink);background:var(--surface-2)}
 
     /* ── SIDEBAR TABS ── */
-    .sb-tabs{display:flex;border-bottom:2px solid var(--gray-200);flex-shrink:0;background:var(--surface)}
+    .sb-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
     .sb-tab{
       flex:1;padding:11px 6px;border:none;background:transparent;font-family:var(--font);
-      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
-      border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;
+      font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-3);
+      border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;
       text-align:center;min-width:0
     }
-    .sb-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .sb-tab.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
     .sb-panel{display:none;flex-direction:column;flex:1;overflow:hidden}
     .sb-panel.on{display:flex}
     .public-notice{
-      font-size:11px;color:var(--gray-500);padding:7px 12px;
-      background:rgba(46,125,50,.05);border-bottom:1px solid var(--gray-200);
+      font-size:11px;color:var(--ink-3);padding:7px 12px;
+      background:var(--surface-2);border-bottom:1px solid var(--border);
       line-height:1.65;flex-shrink:0
     }
 
     /* ── COMMUNITY BOARD ── */
     .comm-head{
-      background:var(--surface);border-bottom:1px solid var(--gray-200);
+      background:var(--surface);border-bottom:1px solid var(--border);
       padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0
     }
-    .comm-head-title{font-size:15px;font-weight:800;flex:1}
-    .comm-tabs{display:flex;gap:0;border-bottom:1px solid var(--gray-200);background:var(--surface);flex-shrink:0}
+    .comm-head-title{font-size:15px;font-weight:600;flex:1}
+    .comm-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
     .comm-tab{
       flex:1;padding:10px;border:none;background:transparent;font-family:var(--font);
-      font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);
+      font-size:12px;font-weight:500;cursor:pointer;color:var(--ink-3);
       border-bottom:2px solid transparent;transition:all .15s
     }
-    .comm-tab.on{color:var(--green);border-bottom-color:var(--green)}
+    .comm-tab.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
     .comm-list{flex:1;overflow-y:auto;padding:10px}
-    .comm-list::-webkit-scrollbar{width:3px}
-    .comm-list::-webkit-scrollbar-thumb{background:var(--gray-200);border-radius:2px}
+    .comm-list::-webkit-scrollbar{width:4px}
+    .comm-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:999px}
 
     /* Post card */
     .post-card{
-      background:var(--surface2);border:1.5px solid var(--gray-200);border-radius:12px;
-      padding:14px;margin-bottom:10px;cursor:pointer;transition:all .15s
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);
+      padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s;
+      box-shadow:var(--shadow-sm)
     }
-    .post-card:hover{border-color:var(--green);box-shadow:var(--shadow)}
+    .post-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md)}
     .post-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
     .post-avatar{
-      width:28px;height:28px;border-radius:50%;background:var(--green);
-      display:flex;align-items:center;justify-content:center;color:#fff;
-      font-size:12px;font-weight:700;flex-shrink:0
+      width:28px;height:28px;border-radius:var(--r-pill);
+      background:oklch(0.88 0.04 280);color:oklch(0.35 0.12 280);
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:600;flex-shrink:0
     }
-    .post-author{font-size:12px;font-weight:600;color:var(--gray-700)}
-    .post-time{font-size:11px;color:var(--gray-500);margin-left:auto}
-    .post-title{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--gray-900)}
-    .post-body{font-size:13px;color:var(--gray-700);line-height:1.5;
+    .post-author{font-size:12px;font-weight:600;color:var(--ink-2)}
+    .post-time{font-size:11px;color:var(--ink-4);margin-left:auto}
+    .post-title{font-size:15px;font-weight:600;letter-spacing:-0.2px;margin-bottom:6px;color:var(--ink)}
+    .post-body{font-size:13px;color:var(--ink-2);line-height:1.55;
       display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .post-footer{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:8px;border-top:1px solid var(--gray-100)}
-    .post-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px}
-    .tag-tip{background:#E3F2FD;color:#1565C0}
-    .tag-deal{background:#FFF8E1;color:#E65100}
-    .tag-question{background:#F3E5F5;color:#6A1B9A}
-    .tag-review{background:var(--green-pale);color:var(--green)}
+    .post-footer{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+    .post-tag{font-size:11px;font-weight:500;padding:4px 9px;border-radius:var(--r-pill)}
+    .tag-tip{background:oklch(0.96 0.04 155);color:oklch(0.38 0.13 155)}
+    .tag-deal{background:var(--accent-soft);color:var(--accent-ink)}
+    .tag-question{background:oklch(0.96 0.03 280);color:oklch(0.45 0.12 280)}
+    .tag-review{background:oklch(0.96 0.03 310);color:oklch(0.45 0.13 310)}
     .vote-btn{
-      display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
-      border:1.5px solid var(--gray-200);background:var(--surface3);cursor:pointer;
-      font-family:var(--font);font-size:12px;font-weight:600;color:var(--gray-700);
+      display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:var(--r-sm);
+      border:1px solid var(--border);background:var(--surface);cursor:pointer;
+      font-family:var(--font);font-size:12px;font-weight:500;color:var(--ink-3);
       transition:all .15s
     }
-    .vote-btn:hover{border-color:var(--orange,#FB8C00);color:var(--orange,#FB8C00)}
-    .vote-btn.voted{border-color:var(--orange,#FB8C00);background:#FFF3E0;color:#E65100}
-    .comment-count{font-size:12px;color:var(--gray-500);display:flex;align-items:center;gap:3px;margin-left:auto}
+    .vote-btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+    .vote-btn.voted{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+    .comment-count{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:3px;margin-left:auto}
 
     /* Share modal */
     .share-btn{
-      display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;
-      font-family:var(--font);font-size:14px;font-weight:600;text-decoration:none;
+      display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--r-md);
+      font-family:var(--font);font-size:14px;font-weight:500;text-decoration:none;
       border:none;cursor:pointer;width:100%;transition:opacity .15s
     }
     .share-btn:hover{opacity:.85}
@@ -603,45 +669,45 @@
     .share-tw{background:#000;color:#fff}
     .share-line{background:#06C755;color:#fff}
     .share-ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff}
-    .share-mail{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
-    .share-copy{background:var(--gray-100);color:var(--gray-700);border:1.5px solid var(--gray-200)}
+    .share-mail{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border)}
+    .share-copy{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--border)}
 
     /* Post detail overlay */
     #post-modal .modal{max-width:600px}
-    .post-detail-title{font-size:17px;font-weight:800;margin-bottom:10px;line-height:1.4}
-    .post-detail-body{font-size:14px;color:var(--gray-700);line-height:1.7;margin-bottom:16px}
-    .post-comments{border-top:1px solid var(--gray-200);padding-top:14px}
-    .comment-item{background:var(--surface3);border-radius:8px;padding:10px;margin-bottom:8px}
+    .post-detail-title{font-size:17px;font-weight:600;letter-spacing:-0.3px;margin-bottom:10px;line-height:1.4}
+    .post-detail-body{font-size:14px;color:var(--ink-2);line-height:1.7;margin-bottom:16px}
+    .post-comments{border-top:1px solid var(--border);padding-top:14px}
+    .comment-item{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;margin-bottom:8px}
     .comment-author{font-size:12px;font-weight:600;margin-bottom:3px}
-    .comment-text{font-size:13px;color:var(--gray-700);line-height:1.5}
+    .comment-text{font-size:13px;color:var(--ink-2);line-height:1.5}
     .comment-form{display:flex;gap:8px;margin-top:12px}
     .comment-input{
-      flex:1;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:20px;
-      font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;
-      background:var(--surface3);color:var(--gray-900)
+      flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r-pill);
+      font-family:var(--font);font-size:13px;outline:none;transition:border-color .15s;
+      background:var(--surface);color:var(--ink)
     }
-    .comment-input:focus{border-color:var(--green)}
+    .comment-input:focus{border-color:var(--ink)}
     .btn-comment-send{
-      padding:9px 16px;background:var(--green);color:#fff;border:none;
-      border-radius:20px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer
+      padding:9px 16px;background:var(--ink);color:#fff;border:none;
+      border-radius:var(--r-pill);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer
     }
 
     /* New post form */
     .new-post-btn{
-      width:100%;padding:12px;background:var(--green);color:#fff;border:none;
-      border-radius:10px;font-family:var(--font);font-size:14px;font-weight:700;
+      width:100%;padding:10px 12px;background:var(--ink);color:#fff;border:none;
+      border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;
       cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
       margin-bottom:10px;transition:background .15s
     }
-    .new-post-btn:hover{background:var(--green-light)}
+    .new-post-btn:hover{background:oklch(0.1 0.01 70)}
     #new-post-modal .modal{max-width:480px}
     .tag-select{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
     .tag-opt{
-      padding:5px 12px;border-radius:10px;border:1.5px solid var(--gray-200);
-      background:var(--surface3);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;
-      color:var(--gray-700);transition:all .15s
+      padding:5px 12px;border-radius:var(--r-pill);border:1px solid var(--border);
+      background:var(--surface);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;
+      color:var(--ink-2);transition:all .15s
     }
-    .tag-opt.on{border-color:var(--green);background:var(--green-pale);color:var(--green)}
+    .tag-opt.on{border-color:var(--ink);background:var(--surface-3);color:var(--ink)}
 
     /* ── GALLERY LIGHTBOX ── */
     #gallery-modal{align-items:center;justify-content:center;background:rgba(0,0,0,.93);z-index:3000}
@@ -665,9 +731,9 @@
 
     /* ── ADMIN EDIT MODAL ── */
     #admin-edit-modal .modal{max-width:640px}
-    .ae-menu-row{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px}
-    .ae-menu-thumb{width:52px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--gray-100)}
-    .ae-rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:6px}
+    .ae-menu-row{display:flex;gap:8px;align-items:center;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+    .ae-menu-thumb{width:52px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--surface-2)}
+    .ae-rev-row{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -683,10 +749,10 @@
   </a>
   <div class="hdr-btns">
     <button class="hdr-btn hdr-btn-yellow" onclick="openAddModal()">
-      <i class="fa fa-plus"></i><span> เพิ่มร้าน</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span> เพิ่มร้าน</span>
     </button>
     <button class="hdr-btn hdr-btn-red" onclick="openReportGeneral()">
-      <i class="fa fa-flag"></i><span> รายงาน</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg><span> รายงาน</span>
     </button>
   </div>
 </header>
@@ -695,24 +761,24 @@
 <div id="topbar">
   <div class="search-row">
     <div class="search-wrap">
-      <i class="fa fa-magnifying-glass"></i>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="search-input" placeholder="ค้นหาร้าน หรือย่าน..." oninput="doSearch()">
     </div>
     <button class="btn-locate" id="btn-loc" onclick="locateMe()" title="">
-      <i class="fa fa-location-crosshairs" id="loc-icon"></i>
+      <svg id="loc-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="10" stroke-dasharray="2 4" opacity="0.4"/></svg>
       <span class="locate-tip">ค้นหาตำแหน่งของฉัน</span>
     </button>
   </div>
   <div class="filter-row">
     <button class="btn-filter-open" id="btn-price-filter" onclick="openFilterModal()">
-      <i class="fa fa-sliders"></i> ตัวกรอง <span id="filter-active-dot" style="display:none" class="filter-active-dot"></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg> ตัวกรอง <span id="filter-active-dot" style="display:none" class="filter-active-dot"></span>
     </button>
-    <button class="chip on" data-cat="all" onclick="setFilter('all',this)"><i class="fa fa-border-all"></i> ทั้งหมด</button>
-    <button class="chip" data-cat="street" onclick="setFilter('street',this)"><span class="dot" style="background:#FF7043"></span>Street Food</button>
-    <button class="chip" data-cat="restaurant" onclick="setFilter('restaurant',this)"><span class="dot" style="background:#1E88E5"></span>ร้านอาหาร</button>
-    <button class="chip" data-cat="vendor" onclick="setFilter('vendor',this)"><span class="dot" style="background:#8E24AA"></span>แผงลอย</button>
-    <button class="chip" data-cat="market" onclick="setFilter('market',this)"><span class="dot" style="background:#F9A825"></span>ตลาดนัด</button>
-    <button class="chip" data-cat="convenience" onclick="setFilter('convenience',this)"><span class="dot" style="background:#43A047"></span>สะดวกซื้อ</button>
+    <button class="chip on" data-cat="all" onclick="setFilter('all',this)">ทั้งหมด</button>
+    <button class="chip" data-cat="street" onclick="setFilter('street',this)">Street Food</button>
+    <button class="chip" data-cat="restaurant" onclick="setFilter('restaurant',this)">ร้านอาหาร</button>
+    <button class="chip" data-cat="vendor" onclick="setFilter('vendor',this)">แผงลอย</button>
+    <button class="chip" data-cat="market" onclick="setFilter('market',this)">ตลาดนัด</button>
+    <button class="chip" data-cat="convenience" onclick="setFilter('convenience',this)">สะดวกซื้อ</button>
   </div>
 </div>
 
@@ -742,7 +808,7 @@
     </div>
 
     <div class="public-notice">
-      <i class="fa fa-circle-info" style="color:var(--green)"></i>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--success)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       เนื่องจากเปิดสาธารณะให้ทุกคนสามารถเข้ามาเพิ่มร้านได้เอง ถ้าเจอข้อมูลร้านไหนไม่ถูกต้องสามารถแจ้ง Admin ไปตรวจสอบได้ครับ
     </div>
 
@@ -765,17 +831,16 @@
     <!-- กระดานข่าว panel -->
     <div class="sb-panel" id="sbpanel-board">
       <div class="comm-head">
-        <span style="font-size:18px">📋</span>
         <span class="comm-head-title">กระดานข่าว</span>
         <button class="new-post-btn" style="width:auto;padding:7px 12px;margin-bottom:0;font-size:12px" onclick="openNewPostModal()">
-          <i class="fa fa-pen"></i> โพสต์ใหม่
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> โพสต์ใหม่
         </button>
       </div>
       <div class="comm-tabs">
-        <button class="comm-tab on" onclick="switchCommTab('hot',this)">🔥 ยอดนิยม</button>
-        <button class="comm-tab" onclick="switchCommTab('new',this)">🆕 ล่าสุด</button>
-        <button class="comm-tab" onclick="switchCommTab('tip',this)">💡 ทิปประหยัด</button>
-        <button class="comm-tab" onclick="switchCommTab('deal',this)">🏷️ ดีล</button>
+        <button class="comm-tab on" onclick="switchCommTab('hot',this)">ยอดนิยม</button>
+        <button class="comm-tab" onclick="switchCommTab('new',this)">ล่าสุด</button>
+        <button class="comm-tab" onclick="switchCommTab('tip',this)">ทิปประหยัด</button>
+        <button class="comm-tab" onclick="switchCommTab('deal',this)">ดีล</button>
       </div>
       <div class="comm-list" id="comm-list"></div>
     </div>
@@ -785,10 +850,24 @@
 <!-- MOBILE NAV -->
 <div id="mobile-nav">
   <div class="mnav">
-    <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')"><i class="fa fa-map-location-dot"></i><span>แผนที่</span></button>
-    <button class="mnav-btn mnav-add" onclick="openAddModal()"><div class="add-circle"><i class="fa fa-plus"></i></div><span>เพิ่มร้าน</span></button>
-    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')"><i class="fa fa-list"></i><span>แนะนำ</span></button>
-    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')"><i class="fa fa-comments"></i><span>กระดาน</span></button>
+    <button class="mnav-btn on" id="mnav-map" onclick="switchTab('map')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>แผนที่</span>
+    </button>
+    <button class="mnav-btn mnav-add" onclick="openAddModal()">
+      <div class="add-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <span>เพิ่มร้าน</span>
+    </button>
+    <button class="mnav-btn" id="mnav-list" onclick="switchTab('list')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span>แนะนำ</span>
+    </button>
+    <button class="mnav-btn" id="mnav-comm" onclick="switchTab('community')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>กระดาน</span>
+    </button>
   </div>
 </div>
 
@@ -801,10 +880,10 @@
 <div class="overlay" id="add-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('add-modal')"><i class="fa fa-times"></i></button>
+    <button class="modal-close" onclick="closeModal('add-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div id="add-form">
-      <div style="font-size:18px;font-weight:800;margin-bottom:4px">🍜 เพิ่มร้านอาหาร</div>
-      <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">ช่วยกันเพิ่มร้านดีราคาถูก 💪</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px;letter-spacing:-0.4px">เพิ่มร้านอาหาร</div>
+      <div style="font-size:13px;color:var(--ink-3);margin-bottom:14px">ช่วยกันเพิ่มร้านดีราคาถูก</div>
 
       <div class="form-g">
         <label class="form-lbl">ชื่อร้าน<span class="req">*</span></label>
@@ -849,7 +928,7 @@
           <i class="fa fa-star" data-v="4" onclick="pickVal(4)"></i>
           <i class="fa fa-star" data-v="5" onclick="pickVal(5)"></i>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-top:4px" id="val-label">กดดาวเพื่อให้คะแนนความคุ้มค่า</div>
+        <div style="font-size:11px;color:var(--ink-3);margin-top:4px" id="val-label">กดดาวเพื่อให้คะแนนความคุ้มค่า</div>
       </div>
 
       <div class="form-g">
@@ -869,10 +948,10 @@
             onkeydown="if(event.key==='Enter'){event.preventDefault();searchAddress()}"
             style="flex:1">
           <button type="button" id="addr-btn" onclick="searchAddress()"
-            style="flex-shrink:0;padding:9px 14px;background:var(--green);color:#fff;border:none;
+            style="flex-shrink:0;padding:9px 14px;background:var(--ink);color:#fff;border:none;
               border-radius:8px;cursor:pointer;font-size:14px;font-family:var(--font);font-weight:600;
               display:flex;align-items:center;gap:5px;white-space:nowrap">
-            <i class="fa fa-search"></i> ค้นหา
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ค้นหา
           </button>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
@@ -882,20 +961,20 @@
               placeholder="วาง Google Maps URL เต็ม (https://www.google.com/maps/place/...)"
               oninput="parseGmapsUrl(this.value)"
               onpaste="setTimeout(()=>parseGmapsUrl(document.getElementById('gmaps-url').value),50)"
-              style="padding-left:30px;font-size:12px;color:var(--gray-700)">
+              style="padding-left:30px;font-size:12px;color:var(--ink-2)">
           </div>
         </div>
-        <div style="font-size:11px;color:var(--gray-500);margin-bottom:6px;padding:0 2px">
-          ⚠️ รองรับเฉพาะ URL เต็มจาก Google Maps เท่านั้น · วิธีได้ URL เต็ม: เปิด Google Maps บน <strong>คอม</strong> → กดร้าน → copy URL จาก address bar
+        <div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;padding:0 2px">
+          รองรับเฉพาะ URL เต็มจาก Google Maps เท่านั้น · วิธีได้ URL เต็ม: เปิด Google Maps บน <strong>คอม</strong> → กดร้าน → copy URL จาก address bar
         </div>
         <div class="pin-map-bar">
-          <div style="font-size:11px;color:var(--gray-500)">💡 คลิกบนแผนที่เพื่อปักหมุด · ลากหมุดเพื่อปรับตำแหน่ง</div>
+          <div style="font-size:11px;color:var(--ink-3)">คลิกบนแผนที่เพื่อปักหมุด · ลากหมุดเพื่อปรับตำแหน่ง</div>
           <button class="btn-expand-map" id="btn-expand-map" onclick="togglePinMap()">
-            <i class="fa fa-expand" id="expand-icon"></i> ขยาย
+            <svg id="expand-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg> ขยาย
           </button>
         </div>
         <div id="pin-map"></div>
-        <div class="pin-status" id="pin-status"><i class="fa fa-circle-info"></i> พิมพ์ที่อยู่แล้วกดค้นหา หรือคลิกบนแผนที่</div>
+        <div class="pin-status" id="pin-status"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> พิมพ์ที่อยู่แล้วกดค้นหา หรือคลิกบนแผนที่</div>
       </div>
 
       <div class="form-g">
@@ -904,7 +983,7 @@
           ondragover="event.preventDefault();this.classList.add('drag')"
           ondragleave="this.classList.remove('drag')"
           ondrop="handleDrop(event)">
-          <div class="upload-icon"><i class="fa fa-image"></i></div>
+          <div class="upload-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
           <div class="upload-text">คลิกหรือลากไฟล์มาวาง<br><strong>รองรับ JPG, PNG, WEBP</strong></div>
         </div>
         <input type="file" id="file-input" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
@@ -916,16 +995,16 @@
         <textarea class="form-ta" id="f-desc" placeholder="บอกเพื่อนๆ ว่าเมนูเด็ดคืออะไร..."></textarea>
       </div>
 
-      <button class="btn-submit" onclick="submitShop()"><i class="fa fa-check-circle"></i> ส่งข้อมูลร้าน</button>
+      <button class="btn-submit" onclick="submitShop()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ส่งข้อมูลร้าน</button>
     </div>
 
     <div class="success-box" id="add-success">
       <div class="suc-icon">🎉</div>
       <div class="suc-title">ขอบคุณมากเลย!</div>
       <div class="suc-text">ร้านของคุณอยู่ระหว่างตรวจสอบ<br>Admin จะอนุมัติและแสดงในแผนที่เร็วๆ นี้ครับ</div>
-      <div style="background:rgba(46,125,50,.08);border:1px solid rgba(46,125,50,.2);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--gray-700);line-height:1.7;text-align:left">
-        <i class="fa fa-circle-info" style="color:var(--green);margin-right:4px"></i>
-        เนื่องจากเปิดสาธารณะให้ทุกคนสามารถเข้ามาเพิ่มร้านได้เอง ถ้าเจอข้อมูลร้านไหนไม่ถูกต้องสามารถแจ้ง Admin ผ่านปุ่ม <strong>🚩 รายงาน</strong> ในหน้ารายละเอียดร้านได้เลยครับ
+      <div style="background:oklch(0.96 0.025 155);border:1px solid oklch(0.88 0.06 155);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--ink-2);line-height:1.7;text-align:left">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--success);margin-right:4px;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        เนื่องจากเปิดสาธารณะให้ทุกคนสามารถเข้ามาเพิ่มร้านได้เอง ถ้าเจอข้อมูลร้านไหนไม่ถูกต้องสามารถแจ้ง Admin ผ่านปุ่มรายงานในหน้ารายละเอียดร้านได้เลยครับ
       </div>
       <button class="btn-submit" style="margin-top:14px" onclick="closeModal('add-modal')">ปิด</button>
     </div>
@@ -936,17 +1015,17 @@
 <div class="overlay" id="pw-modal" onclick="closeOnBg(event,'pw-modal')">
   <div class="modal" style="max-width:360px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('pw-modal')"><i class="fa fa-times"></i></button>
+    <button class="modal-close" onclick="closeModal('pw-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="pw-wrap">
       <div style="font-size:34px;margin-bottom:8px">🔐</div>
       <div style="font-size:17px;font-weight:800;margin-bottom:4px">Admin Login</div>
-      <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">กรอก password เพื่อเข้าจัดการร้าน</div>
+      <div style="font-size:13px;color:var(--ink-3);margin-bottom:14px">กรอก password เพื่อเข้าจัดการร้าน</div>
     </div>
     <div class="form-g">
       <input type="password" class="form-inp" id="admin-pw" placeholder="Password"
         onkeydown="if(event.key==='Enter')checkPw()">
     </div>
-    <div id="pw-err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none">รหัสผ่านไม่ถูกต้อง</div>
+    <div id="pw-err" style="color:var(--danger);font-size:13px;margin-bottom:8px;display:none">รหัสผ่านไม่ถูกต้อง</div>
     <button class="btn-submit" onclick="checkPw()">เข้าสู่ระบบ</button>
   </div>
 </div>
@@ -955,15 +1034,17 @@
 <div class="overlay" id="admin-modal" onclick="closeOnBg(event,'admin-modal')">
   <div class="modal" style="max-width:680px;position:relative">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('admin-modal')"><i class="fa fa-times"></i></button>
+    <button class="modal-close" onclick="closeModal('admin-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-      <span style="font-size:22px">🛡️</span>
-      <div>
-        <div style="font-size:17px;font-weight:800">Admin Panel</div>
-        <div style="font-size:11px;color:var(--gray-500)">2RichMap — จัดการร้านค้าและรีวิว</div>
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       </div>
-      <button class="hdr-btn hdr-btn-ghost" style="margin-left:auto;background:var(--red-pale);color:var(--red)" onclick="adminLogout()">
-        <i class="fa fa-right-from-bracket"></i> ออก
+      <div>
+        <div style="font-size:17px;font-weight:700;letter-spacing:-0.3px">Admin Panel</div>
+        <div style="font-size:11px;color:var(--ink-3)">2RichMap — จัดการร้านค้าและรีวิว</div>
+      </div>
+      <button class="hdr-btn hdr-btn-ghost" style="margin-left:auto;background:var(--danger-soft,oklch(0.96 0.03 25));color:var(--danger)" onclick="adminLogout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> ออก
       </button>
     </div>
     <div class="adm-stats" id="adm-stats"></div>
@@ -982,8 +1063,8 @@
 <div class="overlay" id="filter-modal" onclick="closeOnBg(event,'filter-modal')">
   <div class="modal" style="max-width:480px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('filter-modal')"><i class="fa fa-times"></i></button>
-    <div class="filter-modal-title">🔍 ตัวกรองร้านอาหาร</div>
+    <button class="modal-close" onclick="closeModal('filter-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="filter-modal-title">ตัวกรองร้านอาหาร</div>
     <div class="filter-modal-sub">ปรับช่วงราคาและประเภทอาหารที่ต้องการ</div>
 
     <!-- Price Range -->
@@ -1032,10 +1113,10 @@
     </div>
 
     <button class="btn-apply-filter" onclick="applyFilter()">
-      <i class="fa fa-check"></i> ใช้ตัวกรอง
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ใช้ตัวกรอง
     </button>
     <button class="btn-reset-filter" onclick="resetFilter()">
-      <i class="fa fa-rotate-left"></i> รีเซ็ตทั้งหมด
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.9"/></svg> รีเซ็ตทั้งหมด
     </button>
   </div>
 </div>
@@ -1051,9 +1132,9 @@
 <div class="overlay" id="new-post-modal" onclick="closeOnBg(event,'new-post-modal')">
   <div class="modal" style="max-width:480px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('new-post-modal')"><i class="fa fa-times"></i></button>
-    <div style="font-size:18px;font-weight:800;margin-bottom:4px">✍️ โพสต์ใหม่</div>
-    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px">แชร์ทิปประหยัด ดีล หรือถามเพื่อนๆ</div>
+    <button class="modal-close" onclick="closeModal('new-post-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;letter-spacing:-0.4px">โพสต์ใหม่</div>
+    <div style="font-size:13px;color:var(--ink-3);margin-bottom:14px">แชร์ทิปประหยัด ดีล หรือถามเพื่อนๆ</div>
     <div class="form-g">
       <label class="form-lbl">หัวข้อ<span class="req">*</span></label>
       <input type="text" class="form-inp" id="np-title" placeholder="เช่น ข้าวแกง 30 บาทแถวบางซื่อ คุ้มมาก!">
@@ -1075,19 +1156,19 @@
       <label class="form-lbl">ชื่อ (ไม่บังคับ — ไม่กรอก = Anonymous)</label>
       <input type="text" class="form-inp" id="np-author" placeholder="ไม่ระบุชื่อ">
     </div>
-    <button class="btn-submit" onclick="submitPost()"><i class="fa fa-paper-plane"></i> โพสต์เลย</button>
+    <button class="btn-submit" onclick="submitPost()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> โพสต์เลย</button>
   </div>
 </div>
 
 <!-- GALLERY LIGHTBOX -->
 <div class="overlay" id="gallery-modal">
-  <button class="gal-close" onclick="closeModal('gallery-modal')"><i class="fa fa-times"></i></button>
+  <button class="gal-close" onclick="closeModal('gallery-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   <div class="modal">
     <div class="gal-wrap">
       <div class="gal-main">
-        <button class="gal-nav gal-prev" onclick="galNav(-1)"><i class="fa fa-chevron-left"></i></button>
+        <button class="gal-nav gal-prev" onclick="galNav(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
         <img class="gal-img" id="gal-img" src="" alt="">
-        <button class="gal-nav gal-next" onclick="galNav(1)"><i class="fa fa-chevron-right"></i></button>
+        <button class="gal-nav gal-next" onclick="galNav(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
       </div>
       <div class="gal-caption" id="gal-caption"></div>
       <div class="gal-counter" id="gal-counter"></div>
@@ -1100,10 +1181,10 @@
 <div class="overlay" id="admin-edit-modal" onclick="closeOnBg(event,'admin-edit-modal')">
   <div class="modal" style="max-width:640px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('admin-edit-modal')"><i class="fa fa-times"></i></button>
-    <div style="font-size:18px;font-weight:800;margin-bottom:2px">✏️ แก้ไขข้อมูลร้าน</div>
-    <div style="font-size:13px;color:var(--gray-500);margin-bottom:14px" id="adm-edit-shop-name"></div>
-    <div style="display:flex;gap:0;border-bottom:2px solid var(--gray-200);margin-bottom:14px" id="adm-edit-tabs">
+    <button class="modal-close" onclick="closeModal('admin-edit-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div style="font-size:18px;font-weight:700;margin-bottom:2px;letter-spacing:-0.4px">แก้ไขข้อมูลร้าน</div>
+    <div style="font-size:13px;color:var(--ink-3);margin-bottom:14px" id="adm-edit-shop-name"></div>
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px" id="adm-edit-tabs">
       <button class="adm-tab on" onclick="switchAdmEditTab('info',this)">ข้อมูลร้าน</button>
       <button class="adm-tab" onclick="switchAdmEditTab('menus',this)">เมนู</button>
       <button class="adm-tab" onclick="switchAdmEditTab('reviews',this)">รีวิว</button>
@@ -1173,16 +1254,16 @@
     <!-- Tab: Menus -->
     <div id="adm-edit-menus" class="adm-sec">
       <div id="ae-menus-list"></div>
-      <button class="btn-submit" style="padding:10px;font-size:13px;margin-top:8px;background:var(--blue)" onclick="aeAddMenu()">
-        <i class="fa fa-plus"></i> เพิ่มเมนูใหม่
+      <button class="btn-submit" style="padding:10px;font-size:13px;margin-top:8px" onclick="aeAddMenu()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> เพิ่มเมนูใหม่
       </button>
     </div>
     <!-- Tab: Reviews -->
     <div id="adm-edit-reviews" class="adm-sec">
       <div id="ae-reviews-list"></div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--gray-100)">
-      <button class="act-btn act-green" style="flex:2" onclick="adminEditSave()"><i class="fa fa-check"></i> บันทึก</button>
+    <div style="display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <button class="act-btn act-green" style="flex:2" onclick="adminEditSave()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> บันทึก</button>
       <button class="act-btn act-gray" onclick="closeModal('admin-edit-modal')">ยกเลิก</button>
     </div>
   </div>
@@ -3397,8 +3478,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="overlay" id="share-modal" onclick="closeOnBg(event,'share-modal')">
   <div class="modal" style="max-width:400px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('share-modal')"><i class="fa fa-times"></i></button>
-    <div style="font-size:16px;font-weight:800;margin-bottom:14px">📤 แชร์ร้านนี้</div>
+    <button class="modal-close" onclick="closeModal('share-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px;letter-spacing:-0.3px">แชร์ร้านนี้</div>
     <div id="share-modal-body"></div>
   </div>
 </div>
@@ -3407,14 +3488,14 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div class="overlay" id="report-modal" onclick="closeOnBg(event,'report-modal')">
   <div class="modal" style="max-width:480px">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('report-modal')"><i class="fa fa-times"></i></button>
-    <h3 style="font-size:16px;font-weight:800;margin-bottom:4px"><i class="fa fa-flag" style="color:var(--red);margin-right:6px"></i>รายงานข้อมูลไม่ถูกต้อง</h3>
-    <p style="font-size:12px;color:var(--gray-500);margin-bottom:14px">ร้าน: <strong id="rpt-shop-name"></strong></p>
+    <button class="modal-close" onclick="closeModal('report-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger);margin-right:6px;vertical-align:middle"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>รายงานข้อมูลไม่ถูกต้อง</h3>
+    <p style="font-size:12px;color:var(--ink-3);margin-bottom:14px">ร้าน: <strong id="rpt-shop-name"></strong></p>
     <div class="form-g">
       <label class="form-lbl">ระบุปัญหาที่พบ <span class="req">*</span></label>
       <textarea class="form-ta" id="rpt-msg" rows="4" placeholder="เช่น ที่อยู่ไม่ถูกต้อง, ราคาเปลี่ยนแล้ว, ร้านปิดแล้ว..."></textarea>
     </div>
-    <button class="btn-submit" onclick="submitReport()"><i class="fa fa-paper-plane"></i> ส่งรายงาน</button>
+    <button class="btn-submit" onclick="submitReport()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> ส่งรายงาน</button>
   </div>
 </div>
 </body>
