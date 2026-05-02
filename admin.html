@@ -177,7 +177,6 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -187,10 +186,9 @@
     <div class="login-logo">🛡️</div>
     <div class="login-title">Admin Panel</div>
     <div class="login-sub">2RichMap — จัดการร้านค้าและเนื้อหา</div>
-    <div class="login-err" id="pw-err">Email หรือ Password ไม่ถูกต้อง</div>
-    <input type="email" class="form-inp" id="em-input" placeholder="Admin Email" onkeydown="if(event.key==='Enter')checkPw()" style="margin-bottom:8px">
+    <div class="login-err" id="pw-err">รหัสผ่านไม่ถูกต้อง</div>
     <input type="password" class="form-inp" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
-    <button class="btn-login" id="btn-login" onclick="checkPw()"><i class="fa fa-unlock"></i> เข้าสู่ระบบ</button>
+    <button class="btn-login" onclick="checkPw()"><i class="fa fa-unlock"></i> เข้าสู่ระบบ</button>
   </div>
 </div>
 
@@ -474,6 +472,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 // ── CONFIG ──────────────────────────────────────────────
+const PW = '2rich';
 const CAT = {
   street:     {label:'Street Food', color:'#FF7043', icon:'🍢'},
   restaurant: {label:'ร้านอาหาร',   color:'#58A6FF', icon:'🍜'},
@@ -490,7 +489,6 @@ let shopFbKeys = {}; // {shopId: firebaseKey} — ใช้ update/delete เฉ
 let reportFbKeys = {}; // {reportId: firebaseKey} — ใช้ delete เฉพาะ report
 let postFbKeys = {}; // {postId: firebaseKey} — ใช้ update/delete เฉพาะโพสต์
 let pendingFbKeys = {}; // {shopId: firebaseKey} — ใช้ approve/reject เฉพาะร้าน pending
-let _adminInited = false; // กัน enterAdmin() ถูกเรียกซ้ำ
 let editingId = null;
 let addPinLat = null, addPinLng = null, addPinMap = null, addPinMarker = null;
 let addMenus = [];
@@ -498,10 +496,12 @@ let addVal = 0;
 
 // ── AUTH ─────────────────────────────────────────────────
 async function enterAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
   await loadData();
   renderAll();
   setTimeout(initAddMap, 400);
-  // Real-time listener สำหรับ reports — อัปเดตทันทีไม่ต้อง refresh
+  // Real-time listener สำหรับ reports
   db.ref('reports').on('value', snap => {
     const val = snap.val();
     reports = []; reportFbKeys = {};
@@ -510,52 +510,27 @@ async function enterAdmin() {
       entries.forEach(([key, r]) => { if (r) { reports.push(r); if (r.id) reportFbKeys[String(r.id)] = key; } });
     }
     updateReportBadge();
-    // Re-render ถ้า panel reports เปิดอยู่
     const panel = document.getElementById('panel-reports');
     if (panel && panel.classList.contains('on')) renderReports();
   });
 }
 async function checkPw() {
-  const email = document.getElementById('em-input').value.trim();
-  const pw = document.getElementById('pw-input').value;
-  const errEl = document.getElementById('pw-err');
-  const btn = document.getElementById('btn-login');
-  errEl.style.display = 'none';
-  if (!email || !pw) { errEl.textContent = 'กรุณากรอก Email และ Password'; errEl.style.display = 'block'; return; }
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ...';
-  try {
-    await firebase.auth().signInWithEmailAndPassword(email, pw);
-    // onAuthStateChanged จะจัดการเปิด admin panel อัตโนมัติ
-  } catch(e) {
-    const msg = (e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential')
-      ? 'Email หรือ Password ไม่ถูกต้อง'
-      : (e.code === 'auth/invalid-email' ? 'รูปแบบ Email ไม่ถูกต้อง' : 'เข้าสู่ระบบไม่สำเร็จ: ' + e.message);
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
+  const v = document.getElementById('pw-input').value;
+  if (v === PW) {
+    sessionStorage.setItem('2rm_admin', '1');
+    await enterAdmin();
+  } else {
+    document.getElementById('pw-err').style.display = 'block';
     document.getElementById('pw-input').value = '';
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa fa-unlock"></i> เข้าสู่ระบบ';
   }
 }
 function logout() {
-  _adminInited = false;
-  firebase.auth().signOut();
+  sessionStorage.removeItem('2rm_admin');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
 }
-// ── ติดตาม auth state — จัดการ login/logout อัตโนมัติ ──
-firebase.auth().onAuthStateChanged(async user => {
-  if (user) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app-screen').style.display = 'block';
-    if (!_adminInited) { _adminInited = true; await enterAdmin(); }
-  } else {
-    document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('app-screen').style.display = 'none';
-    _adminInited = false;
-    const btn = document.getElementById('btn-login');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-unlock"></i> เข้าสู่ระบบ'; }
-  }
-});
+// Auto-login ถ้า session ยังอยู่
+if (sessionStorage.getItem('2rm_admin') === '1') enterAdmin();
 
 function toggleMobNav() {
   const nav = document.getElementById('adm-nav');
